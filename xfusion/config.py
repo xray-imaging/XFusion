@@ -88,12 +88,12 @@ SECTIONS['convert'] = {
 
 SECTIONS['train'] = {
     'dir-lo-train': {
-        'default': "./train/lo/",
+        'default': '.',
         'type': Path,
         'help': 'name of the directory with the low resolution images',
         'metavar': 'FILE'},
     'dir-hi-train': {
-        'default': "./train/hi/",
+        'default': '.',
         'type': Path,
         'help': 'name of the directory with the high resolution images',
         'metavar': 'FILE'},
@@ -102,12 +102,12 @@ SECTIONS['train'] = {
         'type': str,
         'help': "Path to option YAML file."},
     'path-train-meta-info-file': {
-        'default': "data/meta_info/meta_info_REDS_GT.txt",
+        'default': ".",
         'type': Path,
         'help': 'name of the path to training image meta data',
         'metavar': 'FILE'},
     'path-val-meta-info-file': {
-        'default': "data/meta_info/meta_info_REDSofficial4_test_GT.txt",
+        'default': ".",
         'type': Path,
         'help': 'name of the path to validation image meta data',
         'metavar': 'FILE'},
