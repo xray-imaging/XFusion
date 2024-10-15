@@ -150,6 +150,6 @@ xfusion/train/nohup_testrun2.out
 xfusion/train/script.sh
 xfusion/train/train_sharp/*
 xfusion/train/train_sharp_bicubic/*
-xfusion/train/.nfs0000000001a3565400000314
+xfusion/train/.nfs*
 xfusion/train/nohup_testrun3.out
 xfusion/train/nohup_testrun4.out
