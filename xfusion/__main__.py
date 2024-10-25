@@ -59,8 +59,8 @@ import argparse
 from xfusion import log
 from xfusion import config
 from xfusion import utils
-from xfusion.train import train_reds_gray
-from xfusion.inference import infer
+from xfusion.train import train_reds_gray, train_simple_gray4_VSWINIR_xray_multinode_ddp
+
 
 from os import path as osp
 import urllib3
@@ -93,11 +93,23 @@ def convert(args):
     utils.compile_dataset(args)
 
 
-def train(args):    
-    train_reds_gray.train_pipeline(args)
+def train(args):
+    from xfusion.utils import yaml_load
+    opt = yaml_load(args.opt)
+    if opt['model_type'] == 'EDVRModel':
+        train_reds_gray.train_pipeline(args, opt)
+    elif opt['model_type'] == 'SwinIRModel':
+        train_simple_gray4_VSWINIR_xray_multinode_ddp.train_pipeline(args, opt)
 
 def inference(args):    
-    infer.inference_pipeline(args)
+    if args.model_type == 'EDVRModel':
+        from xfusion.inference import infer
+        infer.inference_pipeline(args)
+    elif args.model_type == 'SwinIRModel':
+        from xfusion.inference import infer_swin_ddp
+        from xfusion.utils import get_time_str
+        ts = get_time_str()
+        infer_swin_ddp.run_inference(ts,args)
 
 def download(args):
     http = urllib3.PoolManager()
@@ -157,7 +169,7 @@ def main():
         cmd_parser.set_defaults(_func=func)
 
     args = config.parse_known_args(parser, subparser=True)
-
+    print(f"parsed args are: {args}")
 
     try:
         # load args from default (config.py) if not changed

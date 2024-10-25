@@ -6,6 +6,24 @@ from .dist_util import get_dist_info, master_only
 
 initialized_logger = {}
 
+class FullTimer():
+    def __init__(self):
+        self.times = []
+        self.start()
+    
+    def start(self):
+        self.start_time = self.tic = time.time()
+    
+    def record(self):
+        self.toc = time.time()
+        self.times.append(self.toc - self.tic)
+        self.tic = time.time()
+
+    def get_full_times(self):
+        return self.times
+
+    def get_avg_time(self):
+        return (sum(self.times) / len(self.times))
 
 class AvgTimer():
 

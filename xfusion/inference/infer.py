@@ -97,6 +97,8 @@ def inference_pipeline(args):
 
     # builds and runs correctly up to here. Please adjust below 
     opt = yaml_load(opt_path)
+    opt['model_type'] = args.model_type
+    opt['path']['pretrain_network_g'] = args.model_file
 
     test_set_name = opt['name']
     gt_size = opt['datasets']['val']['gt_size']

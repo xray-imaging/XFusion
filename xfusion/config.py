@@ -9,6 +9,7 @@ from pathlib import Path
 
 from collections import OrderedDict
 from xfusion import log
+from distutils.util import strtobool
 
 __author__ = "Francesco De Carlo"
 __copyright__ = "Copyright (c) 2024, UChicago Argonne, LLC."
@@ -63,12 +64,12 @@ SECTIONS['home'] = {
 }
 
 SECTIONS['convert'] = {
-    'dir-lo': {
+    'dir-lo-convert': {
         'default': os.path.join(XFUSION_TRAIN_HOME,"train_sharp_bicubic/X4/"),
         'type': Path,
         'help': 'name of the directory with the low resolution images',
         'metavar': 'FILE'},
-    'dir-hi': {
+    'dir-hi-convert': {
         'default': os.path.join(XFUSION_TRAIN_HOME,"train_sharp/"),
         'type': Path,
         'help': 'name of the directory with the high resolution images',
@@ -88,12 +89,22 @@ SECTIONS['convert'] = {
 
 SECTIONS['train'] = {
     'dir-lo-train': {
-        'default': "./train/lo/",
+        'default': '.',
         'type': Path,
         'help': 'name of the directory with the low resolution images',
         'metavar': 'FILE'},
     'dir-hi-train': {
-        'default': "./train/hi/",
+        'default': '.',
+        'type': Path,
+        'help': 'name of the directory with the high resolution images',
+        'metavar': 'FILE'},
+    'dir-lo-val': {
+        'default': '.',
+        'type': Path,
+        'help': 'name of the directory with the low resolution images',
+        'metavar': 'FILE'},
+    'dir-hi-val': {
+        'default': '.',
         'type': Path,
         'help': 'name of the directory with the high resolution images',
         'metavar': 'FILE'},
@@ -102,12 +113,12 @@ SECTIONS['train'] = {
         'type': str,
         'help': "Path to option YAML file."},
     'path-train-meta-info-file': {
-        'default': "data/meta_info/meta_info_REDS_GT.txt",
+        'default': ".",
         'type': Path,
         'help': 'name of the path to training image meta data',
         'metavar': 'FILE'},
     'path-val-meta-info-file': {
-        'default': "data/meta_info/meta_info_REDSofficial4_test_GT.txt",
+        'default': ".",
         'type': Path,
         'help': 'name of the path to validation image meta data',
         'metavar': 'FILE'},
@@ -116,7 +127,7 @@ SECTIONS['train'] = {
         'help': "When set continue training from the specified model file"},
     'launcher' : {
         'default' : 'none',
-        'choices' : ['none', 'pytorch', 'slurm'],
+        'choices' : ['none', 'pytorch', 'slurm','polaris'],
         'help': "Job launcher."},
     'auto-resume': {
         'default': False,
@@ -137,6 +148,81 @@ SECTIONS['train'] = {
         'default': True,
         'help': "When set train is True",
         'action': 'store_true'},
+    
+    'drop_path_rate': {
+        'default': 0.2,
+        'type': float,
+        'help': "Probability of stochastic depth"},
+    'iter_div_factor': {
+        'default': 10,
+        'type': int,
+        'help': "Divisor of the total number of iterations"},
+    'num_frame': {
+        'default': 3,
+        'type': int,
+        'help': "Number of input low resolution frames to the model"},
+    'embed_dim': {
+        'default': 192,
+        'type': int,
+        'help': "Dimension of the embedding layer"},
+    'batch_size': {
+        'default': 1,
+        'type': int,
+        'help': "Number of samples in a batch"},
+    'initial_lr': {
+        'default': 2e-4,
+        'type': float,
+        'help': "Initial learning rate"},
+    'num_workers': {
+        'default': 3,
+        'type': int,
+        'help': "Number of workers for data loader"},
+    'warmup_iter': {
+        'default': -1,
+        'type': int,
+        'help': "Number of iterations for training warm up"},
+    'scale_depth': {
+        'default': 1,
+        'type': int,
+        'help': "Multiplier of the original model depth"},
+    'scale_mha': {
+        'default': 1,
+        'type': float,
+        'help': "Multiplier of the original model transformer block number of attention heads"},
+    'window_size_spatial': {
+        'default': 8,
+        'type': int,
+        'help': "Window size to group tokens of vit"},
+    'dataset_enlarge_ratio': {
+        'default': 10.0,
+        'type': float,
+        'help': "Multiplier of the original number of training samples"},
+    'sub_dataset': {
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': "When set the original training data are randomly sub-sampled for training"},
+    'sub_dataset_frac': {
+        'default': 1.0,
+        'type': float,
+        'help': "Fraction of the original training data set size to sub-sample"},
+    'resi_connection': {
+        'default': '1conv',
+        'choices': ['1conv','3conv','0conv'],
+        'type': str,
+        'help': "Type of operation in the vit residual connection"},
+    'conv_window_size': {
+        'default': 3,
+        'type': int,
+        'help': "Size of convolution window if used in the vit residual connection"},
+    'single_epoch_ok': {
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': "If to only train data for one epoch"
+    },
+    'profiler_iter_num': {
+        'default': 3,
+        'type': int,
+        'help': "Number of subsequent iterations to track computation performance for HTA"},
   }
 
 SECTIONS['download'] = {
@@ -156,7 +242,12 @@ SECTIONS['inference'] = {
     'opt' : {
         'default' : '.',
         'type': str,
-        'help': "Path to option YAML file."},
+        'help': "Path to inference option YAML file."},
+    'arch-opt': {
+        'default': '.',
+        'type': str,
+        'help': 'Path to train option YAML file.'
+    },
     'lo-frame-sep' : {
         'default' : 1,
         'type': int,
@@ -177,6 +268,44 @@ SECTIONS['inference'] = {
         'default' : 'stf',
         'type': str,
         'help': "Mode"},
+    'align_features_ok': {
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': "When set applies deformable conv to align features before vit feature enhancement"},
+    'adapt_deformable_conv':{
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': "When set applies linear transformation to match channel size of the deformable conv layer and vit"},
+    'model_file': {
+        'default': None,
+        'type': Path,
+        'help': "When set the path to the model weights to initialize the model"},
+    'num_frame': {
+        'default': 3,
+        'type': int,
+        'help': "Number of input low resolution frames to the model"},
+    'scale_mha': {
+        'default': 1,
+        'type': float,
+        'help': "Multiplier of the original model transformer block number of attention heads"},
+    'embed_dim': {
+        'default': 192,
+        'type': int,
+        'help': "Dimension of the embedding layer"},
+    'window_size_spatial': {
+        'default': 8,
+        'type': int,
+        'help': "Window size to group tokens of vit"},
+    'scale_depth': {
+        'default': 1,
+        'type': int,
+        'help': "Multiplier of the original model depth"},
+    'model_type': {
+        'default': 'SwinIRModel',
+        'choices': ['SwinIRModel','EDVRModel'],
+        'type': str,
+        'help': 'Model type'
+    }
   }
 
 HOME_PARAMS = ('home', )
@@ -235,7 +364,7 @@ def parse_known_args(parser, subparser=False):
         #print(subparser_value, config_values, values)
     else:
         values = ""
-
+    print(values)
     return parser.parse_known_args(values)[0]
 
 

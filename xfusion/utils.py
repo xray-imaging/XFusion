@@ -1,7 +1,7 @@
 import os
 import yaml
 import numpy as np
-
+import time
 from tqdm import tqdm
 from pathlib import Path
 from natsort import natsorted
@@ -10,6 +10,8 @@ from PIL import Image
 
 from xfusion import log
 
+def get_time_str():
+    return time.strftime('%Y%m%d_%H%M%S', time.localtime())
 
 def _postprocess_yml_value(value):
     # None

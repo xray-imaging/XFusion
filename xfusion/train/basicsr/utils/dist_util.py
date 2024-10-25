@@ -14,8 +14,18 @@ def init_dist(launcher, backend='nccl', **kwargs):
         _init_dist_pytorch(backend, **kwargs)
     elif launcher == 'slurm':
         _init_dist_slurm(backend, **kwargs)
+    elif launcher == 'polaris':
+        _init_dist_polaris(backend)
     else:
         raise ValueError(f'Invalid launcher type: {launcher}')
+
+def _init_dist_polaris(backend):
+    size = int(os.environ.get('NTOTRANKS',-1))
+    rank = int(os.environ.get('PMI_RANK',-1))
+    assert size > 0
+    assert rank >= 0
+    torch.cuda.set_device(0) # set device id to 0 as only 1 is visible for each process
+    dist.init_process_group(backend=backend,rank=rank,world_size=size)
 
 
 def _init_dist_pytorch(backend, **kwargs):

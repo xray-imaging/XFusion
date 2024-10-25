@@ -150,3 +150,12 @@ xfusion/train/nohup_testrun2.out
 xfusion/train/script.sh
 xfusion/train/train_sharp/*
 xfusion/train/train_sharp_bicubic/*
+xfusion/train/.nfs0000000001a3565400000314
+xfusion/train/nohup_testrun3.out
+xfusion/train/nohup_testrun4.out
+xfusion/inference/script_inference.sh
+xfusion/train/script_multinode_ddp.sh
+xfusion/train/script_multinode_ddp_scale18_rerun3.sh
+xfusion/train/logs/*
+xfusion/inference/logs/*
+xfusion/model/*
