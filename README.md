@@ -27,7 +27,8 @@ python train_reds_gray.py
 
 ### Inference
 #### Data preparation
-There are two sets of sample data to be downloaded from the [Tomobank](https://tomobank.readthedocs.io/en/latest/source/data/docs.data.radio.html)
+There are two sets of sample data to be downloaded from the [Tomobank](https://tomobank.readthedocs.io/en/latest/source/data/docs.data.radio.html).
+
 Change directory to `inference` and run
 ```
 python infer.py
