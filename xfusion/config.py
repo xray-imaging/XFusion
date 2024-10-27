@@ -64,22 +64,22 @@ SECTIONS['home'] = {
 
 SECTIONS['convert'] = {
     'dir-lo': {
-        'default': "./train/train_sharp_bicubic/X4/",
+        'default': os.path.join(XFUSION_TRAIN_HOME,"train_sharp_bicubic/X4/"),
         'type': Path,
         'help': 'name of the directory with the low resolution images',
         'metavar': 'FILE'},
     'dir-hi': {
-        'default': "./train/train_sharp/",
+        'default': os.path.join(XFUSION_TRAIN_HOME,"train_sharp/"),
         'type': Path,
         'help': 'name of the directory with the high resolution images',
         'metavar': 'FILE'},
     'out-dir-lo': {
-        'default': ".",
+        'default': os.path.join(XFUSION_TRAIN_HOME,"train_sharp_mono_1ch_bicubic/X4/"),
         'type': Path,
         'help': 'name of the output directory for the low resolution images',
         'metavar': 'FILE'},
     'out-dir-hi': {
-        'default': ".",
+        'default': os.path.join(XFUSION_TRAIN_HOME,"train_sharp_mono_1ch/"),
         'type': Path,
         'help': 'name of the output directory for the high resolution images',
         'metavar': 'FILE'},
@@ -88,12 +88,12 @@ SECTIONS['convert'] = {
 
 SECTIONS['train'] = {
     'dir-lo-train': {
-        'default': "./train/lo/",
+        'default': '.',
         'type': Path,
         'help': 'name of the directory with the low resolution images',
         'metavar': 'FILE'},
     'dir-hi-train': {
-        'default': "./train/hi/",
+        'default': '.',
         'type': Path,
         'help': 'name of the directory with the high resolution images',
         'metavar': 'FILE'},
@@ -102,12 +102,12 @@ SECTIONS['train'] = {
         'type': str,
         'help': "Path to option YAML file."},
     'path-train-meta-info-file': {
-        'default': "data/meta_info/meta_info_REDS_GT.txt",
+        'default': ".",
         'type': Path,
         'help': 'name of the path to training image meta data',
         'metavar': 'FILE'},
     'path-val-meta-info-file': {
-        'default': "data/meta_info/meta_info_REDSofficial4_test_GT.txt",
+        'default': ".",
         'type': Path,
         'help': 'name of the path to validation image meta data',
         'metavar': 'FILE'},
@@ -138,29 +138,6 @@ SECTIONS['train'] = {
         'help': "When set train is True",
         'action': 'store_true'},
   }
-
-SECTIONS['convert'] = {
-    'dir-lo': {
-        'default': "./train/train_sharp_bicubic/X4/",
-        'type': Path,
-        'help': 'name of the directory with the low resolution images',
-        'metavar': 'FILE'},
-    'dir-hi': {
-        'default': "./train/train_sharp/",
-        'type': Path,
-        'help': 'name of the directory with the high resolution images',
-        'metavar': 'FILE'},
-    'out-dir-lo': {
-        'default': ".",
-        'type': Path,
-        'help': 'name of the output directory for the low resolution images',
-        'metavar': 'FILE'},
-    'out-dir-hi': {
-        'default': ".",
-        'type': Path,
-        'help': 'name of the output directory for the high resolution images',
-        'metavar': 'FILE'},
-    }
 
 SECTIONS['download'] = {
     'dir-inf': {
