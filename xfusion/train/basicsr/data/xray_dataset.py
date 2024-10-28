@@ -294,8 +294,6 @@ class XrayDatasetSTF(data.Dataset):
             val_partition = ['000', '011', '015', '020']
         elif opt['val_partition'] == 'official':
             val_partition = [f'{v:03d}' for v in range(240, 270)]
-        elif opt['val_partition'] == 'officialCTC':
-            val_partition = [f'{v:03d}' for v in range(240, 270)] + ['282', '283', '284', '285']
         elif opt['val_partition'] == 'addma':
             val_partition = [f'{v:03d}' for v in [436,536,636,736]]
         elif opt['val_partition'] == 'insect':
@@ -449,36 +447,6 @@ class XrayDatasetSTF(data.Dataset):
             else:
                 patch_corner = None
 
-        # get flows
-        if self.flow_root is not None:
-            img_flows = []
-            # read previous flows
-            for i in range(self.num_half_frames, 0, -1):
-                if self.is_lmdb:
-                    flow_path = f'{clip_name}/{frame_name}_p{i}'
-                else:
-                    flow_path = (self.flow_root / clip_name / f'{frame_name}_p{i}.png')
-                img_bytes = self.file_client.get(flow_path, 'flow')
-                cat_flow = imfrombytes(img_bytes, flag='grayscale', float32=False)  # uint8, [0, 255]
-                dx, dy = np.split(cat_flow, 2, axis=0)
-                flow = dequantize_flow(dx, dy, max_val=20, denorm=False)  # we use max_val 20 here.
-                img_flows.append(flow)
-            # read next flows
-            for i in range(1, self.num_half_frames + 1):
-                if self.is_lmdb:
-                    flow_path = f'{clip_name}/{frame_name}_n{i}'
-                else:
-                    flow_path = (self.flow_root / clip_name / f'{frame_name}_n{i}.png')
-                img_bytes = self.file_client.get(flow_path, 'flow')
-                cat_flow = imfrombytes(img_bytes, flag='grayscale', float32=False)  # uint8, [0, 255]
-                dx, dy = np.split(cat_flow, 2, axis=0)
-                flow = dequantize_flow(dx, dy, max_val=20, denorm=False)  # we use max_val 20 here.
-                img_flows.append(flow)
-
-            # for random crop, here, img_flows and img_lqs have the same
-            # spatial size
-            img_lqs.extend(img_flows)
-
         # randomly crop
         if self.opt['num_frame_hi'] == 0:
             img_gt, img_lqs = paired_random_crop(img_gt, img_lqs, gt_size, scale, img_gt_path, img_hqs = img_hqs, patch_corner = patch_corner)
@@ -516,14 +484,11 @@ class XrayDatasetSTF(data.Dataset):
         else:
             assert len(img_gt) == 1
             img_gt = img_gt[0]
+            
         if self.opt['num_frame_hi'] == 0:
             pass
         else:
             img_hqs = torch.stack(img_results[-(num_gts+self.opt['num_frame_hi']):-num_gts], dim=0)
-        if self.opt['num_frame_hi'] == 0:
-            pass
-        else:
-            img_hqs = torch.stack(img_results[-(1+self.opt['num_frame_hi']):-1], dim=0)
 
         if self.flow_root is not None:
             img_flows = img2tensor(img_flows)
