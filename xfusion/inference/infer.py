@@ -14,7 +14,8 @@ from torchvision.utils import make_grid
 from skimage.metrics import structural_similarity as ssim
 
 from xfusion.inference.model.edvr_models import EDVRSTFTempRank
-from xfusion.inference.dataset.xray_dataset import XrayVideoTestDatasetSTF
+#from xfusion.inference.dataset.xray_dataset import XrayVideoTestDatasetSTF
+from xfusion.train.basicsr.data.xray_dataset import XrayVideoTestDatasetSTF
 from xfusion.inference.dataset.dist_util import get_dist_info
 from xfusion.train.basicsr.utils import get_root_logger
 from xfusion.utils import yaml_load
@@ -105,7 +106,7 @@ def inference_pipeline(args):
     
     dataroot = config.get_inf_data_dirs(img_class)
     inf_home_dir = Path(dataroot).parent
-    out_dir = inf_home_dir / f'inf_data/{test_set_name}_stf_lr_r_{lo_frame_sep}_hr_d_{hi_frame_sep*2}_b0_{b0}'
+    out_dir = inf_home_dir / f'{test_set_name}_stf_lr_r_{lo_frame_sep}_hr_d_{hi_frame_sep*2}_b0_{b0}'
     out_dir.mkdir(exist_ok=True,parents=True)
 
     log_file = os.path.join(out_dir, f"inference.log")
