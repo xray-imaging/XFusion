@@ -52,7 +52,7 @@ def run_inference(ts, args):
     #torch.cuda.set_device(rank)
     dist.init_process_group(backend='nccl', rank=rank,world_size=world_size)
 
-    mode = str(args.mode)
+    mode = str(args.infer_mode)
     lo_frame_sep = int(args.lo_frame_sep)
     hi_frame_sep = int(args.hi_frame_sep)
     b0 = int(args.b0)

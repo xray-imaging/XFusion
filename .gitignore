@@ -159,3 +159,5 @@ xfusion/train/script_multinode_ddp_scale18_rerun3.sh
 xfusion/train/logs/*
 xfusion/inference/logs/*
 xfusion/model/*
+xfusion/inference/swin_vit_exp.*
+xfusion/train/swin_vit_exp.*

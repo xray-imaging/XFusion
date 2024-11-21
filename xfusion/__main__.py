@@ -70,23 +70,37 @@ import zipfile
 
 def init(args):
 
-    args.home.mkdir(exist_ok=True, parents=True)
-    args.train_home.mkdir(exist_ok=True, parents=True)
-    args.inference_home.mkdir(exist_ok=True, parents=True)
-    args.log_home.mkdir(exist_ok=True, parents=True)
+    if hasattr(args, 'home'):
+        args.home.mkdir(exist_ok=True, parents=True)
+    else:
+        config.make_default_home_dir()
+    if hasattr(args,'train_home'):
+        args.train_home.mkdir(exist_ok=True, parents=True)
+    else:
+        config.make_default_train_home_dir()
+    if hasattr(args,'inference_home'):
+        args.inference_home.mkdir(exist_ok=True, parents=True)
+    else:
+        config.make_default_inference_home_dir()
+    if hasattr(args, 'log_home'):
+        args.log_home.mkdir(exist_ok=True, parents=True)
+    else:
+        config.make_default_log_home_dir()
 
     logger_file = os.path.join(args.log_home,'xfusion.log')
     
+    #HACK: allow continuous logging
     #TODO: ask if can run init multiple times, i.e., to run training multiple times
     if not os.path.exists(logger_file):
         log.setup_custom_logger(lfname=logger_file)
     else:
-        raise RuntimeError("{0} already exists".format(logger_file))
+        log.warning("{0} already exists".format(logger_file))
+    #    raise RuntimeError("{0} already exists".format(logger_file))
     
-    if not os.path.exists(str(args.config)):
-        config.write(str(args.config))
+    if hasattr(args, 'model_type'):
+        config.write(str(args.config), args.model_type)
     else:
-        raise RuntimeError("{0} already exists".format(args.config))
+        config.write(str(args.config), None)
 
 
 def convert(args):
@@ -162,22 +176,42 @@ def main():
 
     subparsers = parser.add_subparsers(title="Commands", metavar='')
 
+    # model type is kept fixed until init is involked again
+    model_type = None
+    if sys.argv[1] == 'init':
+        config_name = config.get_config_name()
+        if os.path.exists(config_name):
+            #raise RuntimeError("{0} already exists".format(args.config))
+            log.info("{0} already exists".format(config_name))
+            # delete the old config and write the new one
+            os.remove(config_name)
+        for i, arg in enumerate(sys.argv):
+            if arg == '--model_type':
+                model_type = sys.argv[i+1]
+    else:
+        model_type = config.get_model_type()
+    
     for cmd, func, sections, text in cmd_parsers:
-        cmd_params = config.Params(sections=sections)
+        cmd_params = config.Params(model_type, sections=sections)
         cmd_parser = subparsers.add_parser(cmd, help=text, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         cmd_parser = cmd_params.add_arguments(cmd_parser)
         cmd_parser.set_defaults(_func=func)
 
-    args = config.parse_known_args(parser, subparser=True)
+    if sys.argv[1] == 'init' and model_type == None:
+        model_type = cmd_params.model_type
+
+    args = config.parse_known_args(parser, model_type, subparser=True)
     print(f"parsed args are: {args}")
 
     try:
         # load args from default (config.py) if not changed
         args._func(args)
-        config.log_values(args)
+        print(f"executed args are: {args.__dict__}")
+        config.log_values(args,model_type)
         # undate globus.config file
         sections = config.XFUSION_PARAMS
-        config.write(args.config, args=args, sections=sections)
+        print(f"model type is {model_type}")
+        config.write(args.config, model_type, args=args, sections=sections)
     except RuntimeError as e:
         log.error(str(e))
         sys.exit(1)

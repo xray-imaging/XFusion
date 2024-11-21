@@ -112,7 +112,7 @@ def inference_pipeline(args):
     log_file = os.path.join(out_dir, f"inference.log")
     logger = get_root_logger(logger_name=__name__, log_level=logging.INFO, log_file=log_file)
     
-    logger.info(f'inference under {args.mode} mode')
+    logger.info(f'inference under {args.infer_mode} mode')
     logger.info(f'LR frame separation is {lo_frame_sep}')
     logger.info(f'HR frame separation is {hi_frame_sep}')
     logger.info(f"path to config file is: {opt_path}")
