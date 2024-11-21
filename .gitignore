@@ -156,6 +156,7 @@ xfusion/train/nohup_testrun4.out
 xfusion/inference/script_inference.sh
 xfusion/train/script_multinode_ddp.sh
 xfusion/train/script_multinode_ddp_scale18_rerun3.sh
+xfusion/train/script_singlenode_dp.sh
 xfusion/train/logs/*
 xfusion/inference/logs/*
 xfusion/model/*
