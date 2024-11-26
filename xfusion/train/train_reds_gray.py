@@ -20,13 +20,13 @@ from pathlib import Path
 
 
 
-def parse_options_(root_path, args):
+def parse_options_(root_path, args, opt):
     import random
-    from xfusion.utils import yaml_load, _postprocess_yml_value
+    from xfusion.utils import _postprocess_yml_value
     if args.force_yml == 'none':
         args.force_yml = None
     # parse yml to dict
-    opt = yaml_load(args.opt)
+    
     print(args.pretrain_network_g)
     if args.pretrain_network_g != 'none':
         assert os.path.isfile(args.pretrain_network_g)
@@ -129,6 +129,7 @@ def parse_options_(root_path, args):
 
     return opt, args
 
+#TODO: move the next 3 functions to the util module
 def init_tb_loggers(opt):
     # initialize wandb logger before tensorboard logger to allow proper sync
     if (opt['logger'].get('wandb') is not None) and (opt['logger']['wandb'].get('project')
@@ -205,12 +206,12 @@ def load_resume_state(opt):
     return resume_state
 
 
-def train_pipeline(args):
+def train_pipeline(args, opt):
     
     root_path = config.get_train_dirs()
 
     # parse options, set distributed setting, set random seed
-    opt, args = parse_options_(root_path, args)
+    opt, args = parse_options_(root_path, args, opt)
     opt['root_path'] = root_path
     
     opt['datasets']['train']['dataroot_gt'] = str(args.dir_hi_train)

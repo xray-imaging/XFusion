@@ -14,7 +14,8 @@ from torchvision.utils import make_grid
 from skimage.metrics import structural_similarity as ssim
 
 from xfusion.inference.model.edvr_models import EDVRSTFTempRank
-from xfusion.inference.dataset.xray_dataset import XrayVideoTestDatasetSTF
+#from xfusion.inference.dataset.xray_dataset import XrayVideoTestDatasetSTF
+from xfusion.train.basicsr.data.xray_dataset import XrayVideoTestDatasetSTF
 from xfusion.inference.dataset.dist_util import get_dist_info
 from xfusion.train.basicsr.utils import get_root_logger
 from xfusion.utils import yaml_load
@@ -97,19 +98,21 @@ def inference_pipeline(args):
 
     # builds and runs correctly up to here. Please adjust below 
     opt = yaml_load(opt_path)
+    opt['model_type'] = args.model_type
+    opt['path']['pretrain_network_g'] = args.model_file
 
     test_set_name = opt['name']
     gt_size = opt['datasets']['val']['gt_size']
     
     dataroot = config.get_inf_data_dirs(img_class)
     inf_home_dir = Path(dataroot).parent
-    out_dir = inf_home_dir / f'inf_data/{test_set_name}_stf_lr_r_{lo_frame_sep}_hr_d_{hi_frame_sep*2}_b0_{b0}'
+    out_dir = inf_home_dir / f'{test_set_name}_stf_lr_r_{lo_frame_sep}_hr_d_{hi_frame_sep*2}_b0_{b0}'
     out_dir.mkdir(exist_ok=True,parents=True)
 
     log_file = os.path.join(out_dir, f"inference.log")
     logger = get_root_logger(logger_name=__name__, log_level=logging.INFO, log_file=log_file)
     
-    logger.info(f'inference under {args.mode} mode')
+    logger.info(f'inference under {args.infer_mode} mode')
     logger.info(f'LR frame separation is {lo_frame_sep}')
     logger.info(f'HR frame separation is {hi_frame_sep}')
     logger.info(f"path to config file is: {opt_path}")

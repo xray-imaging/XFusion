@@ -70,9 +70,9 @@ dependencies:
   - bzip2=1.0.8=h7b6447c_0
   - c-ares=1.19.1=h5eee18b_0
   - c-blosc2=2.12.0=h80c7b02_0
-  - ca-certificates=2024.6.2=hbcca054_0
+  - ca-certificates=2024.8.30=hbcca054_0
   - cachetools=4.2.2=pyhd3eb1b0_0
-  - certifi=2024.6.2=pyhd8ed1ab_0
+  - certifi=2024.8.30=pyhd8ed1ab_0
   - cffi=1.16.0=py311h5eee18b_0
   - cfitsio=3.470=h5893167_7
   - chardet=4.0.0=py311h06a4308_1003
@@ -104,6 +104,7 @@ dependencies:
   - curl=8.5.0=hdbd6064_0
   - cycler=0.11.0=pyhd3eb1b0_0
   - cyrus-sasl=2.1.28=h52b45da_1
+  - cython=3.0.10=py311h5eee18b_0
   - cytoolz=0.12.2=py311h5eee18b_0
   - dask=2023.11.0=py311h06a4308_0
   - dask-core=2023.11.0=py311h06a4308_0
@@ -298,6 +299,8 @@ dependencies:
   - more-itertools=10.1.0=py311h06a4308_0
   - mpc=1.1.0=h10f8cd9_1
   - mpfr=4.0.2=hb69a4c5_1
+  - mpi=1.0=openmpi
+  - mpi4py=3.1.4=py311h3e5f7c9_0
   - mpmath=1.3.0=py311h06a4308_0
   - msgpack-python=1.0.3=py311hdb19cb5_0
   - multidict=6.0.4=py311h5eee18b_0
@@ -326,6 +329,7 @@ dependencies:
   - oniguruma=6.9.7.1=h27cfd23_0
   - openh264=2.1.1=h780b84a_0
   - openjpeg=2.4.0=h3ad879b_0
+  - openmpi=4.0.5=h9b22176_4
   - openpyxl=3.0.10=py311h5eee18b_0
   - openssl=3.0.13=h7f8727e_0
   - orc=1.7.4=hb3bc3d3_1
@@ -350,7 +354,6 @@ dependencies:
   - pkce=1.0.3=py311h06a4308_0
   - pkginfo=1.9.6=py311h06a4308_0
   - platformdirs=3.10.0=py311h06a4308_0
-  - plotly=5.9.0=py311h06a4308_0
   - pluggy=1.0.0=py311h06a4308_1
   - ply=3.11=py311h06a4308_0
   - prometheus_client=0.14.1=py311h06a4308_0
@@ -548,27 +551,38 @@ dependencies:
       - blessed==1.20.0
       - boto3==1.34.77
       - botocore==1.34.77
+      - build==1.2.1
       - croniter==1.3.15
       - dateutils==0.6.12
       - deepdiff==6.7.1
       - editor==1.6.6
       - fastapi==0.88.0
+      - fqdn==1.5.1
       - grpcio==1.62.1
       - h11==0.14.0
+      - holistictraceanalysis==0.2.0
       - huggingface-hub==0.22.2
       - inquirer==3.2.4
+      - isoduration==20.11.0
       - lightning==1.9.0
       - lightning-cloud==0.5.65
       - lightning-utilities==0.11.2
       - natsort==8.4.0
+      - nh3==0.2.17
+      - nose==1.3.7
       - omegaconf==2.3.0
       - opencv-python-headless==4.9.0.80
       - ordered-set==4.1.0
       - packaging==22.0
+      - plotly==5.24.1
+      - py==1.11.0
       - pydantic-core==2.18.2
+      - pyproject-hooks==1.1.0
       - python-multipart==0.0.9
       - pytorch-lightning==2.2.1
       - readchar==4.0.6
+      - readme-renderer==43.0
+      - rfc3986==2.0.0
       - runs==1.2.2
       - s3transfer==0.10.1
       - starlette==0.22.0
@@ -577,9 +591,17 @@ dependencies:
       - tensorboard==2.16.2
       - tensorboard-data-server==0.7.2
       - tokenizers==0.15.2
+      - torch-tb-profiler==0.4.3
       - torchmetrics==1.3.2
       - transformers==4.39.3
+      - tslearn==0.6.3
+      - twine==5.1.1
+      - uri-template==1.3.0
       - uvicorn==0.29.0
+      - webcolors==24.8.0
       - websockets==11.0.3
+      - wget==3.2
+      - xfusion==0.0.1
+      - xmltodict==0.13.0
       - xmod==1.8.1
 prefix: /home/beams/FAST/conda/anaconda3/envs/stf_env
