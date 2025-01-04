@@ -6,11 +6,19 @@ A model to reconstruct high quality x-ray images by combining the high spatial r
 This implementation is based on the [BasicSR toolbox](https://github.com/XPixelGroup/BasicSR). Data for model pre-training are collected from the [REDS dataset](https://seungjunnah.github.io/Datasets/reds).  
 
 ## Usage
-### Virtual environment
-Conda virtual environment (venv) can be installed following `conda env create -f /path/to/stf_env_conda.yml`.  
-This venv has been tested on Python 3.11. Once installed, activate the venv following `conda activate stf_env`.
+### Package installation
+Navigate to the root directory and then run
+```
+pip install .
+```
+to install the package to the selected virtual environment.
 
 ### Data preparation
+To convert the REDS data to gray-scale, run
+```
+xfusion convert --dir-lo-convert *directory/to/low resolution/RGB/training image* --dir-hi-convert *directory/to/high resolution/RGB/training image* --out-dir-lo *directory/to/low resolution/grayscale/training image* --out-dir-hi *directory/to/high resolution/grayscale/training image*
+```
+
 #### Model pretraining
 Download the Sharp dataset called [train_sharp](https://drive.google.com/open?id=1YLksKtMhd2mWyVSkvhDaDLWSc1qYNCz-) and Low Resolution dataset called [train_sharp_bicubic](https://drive.google.com/open?id=1a4PrjqT-hShvY9IyJm3sPF0ZaXyrCozR) from [REDS dataset](https://seungjunnah.github.io/Datasets/reds) to the `datasets` directory at the same level of file `compile_dataset.ipynb`.
 
