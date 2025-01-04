@@ -16,7 +16,7 @@ to install the package to the selected virtual environment.
 ### Data preparation
 To convert the REDS data to gray-scale, run
 <pre>
-xfusion convert --dir-lo-convert <i>directory/to/low resolution/RGB/training image</i> --dir-hi-convert <i>directory/to/high resolution/RGB/training image</i> --out-dir-lo <i>directory/to/low resolution/gray-scale/training image<\> --out-dir-hi <i>directory/to/high resolution/gray-scale/training image<\>
+xfusion convert --dir-lo-convert <i>directory/to/low resolution/RGB/training image</i> --dir-hi-convert <i>directory/to/high resolution/RGB/training image</i> --out-dir-lo <i>directory/to/low resolution/gray-scale/training image</i> --out-dir-hi <i>directory/to/high resolution/gray-scale/training image</i>
 </pre>
 
 #### Model pretraining
