@@ -15,9 +15,9 @@ to install the package to the selected virtual environment.
 
 ### Data preparation
 To convert the REDS data to gray-scale, run
-```
+<pre>
 xfusion convert --dir-lo-convert <pre>directory/to/low resolution/RGB/training image --dir-hi-convert *directory/to/high resolution/RGB/training image* --out-dir-lo *directory/to/low resolution/gray-scale/training image* --out-dir-hi *directory/to/high resolution/gray-scale/training image*
-```
+</pre>
 
 #### Model pretraining
 Download the Sharp dataset called [train_sharp](https://drive.google.com/open?id=1YLksKtMhd2mWyVSkvhDaDLWSc1qYNCz-) and Low Resolution dataset called [train_sharp_bicubic](https://drive.google.com/open?id=1a4PrjqT-hShvY9IyJm3sPF0ZaXyrCozR) from [REDS dataset](https://seungjunnah.github.io/Datasets/reds) to the `datasets` directory at the same level of file `compile_dataset.ipynb`.
