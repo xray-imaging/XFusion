@@ -162,3 +162,6 @@ xfusion/inference/logs/*
 xfusion/model/*
 xfusion/inference/swin_vit_exp.*
 xfusion/train/swin_vit_exp.*
+
+nohup_testrun7.out
+nohup_testrun8.out

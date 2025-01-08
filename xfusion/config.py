@@ -287,6 +287,11 @@ SECTIONS['inference'] = {
         'default': 3,
         'type': int,
         'help': "Number of input low resolution frames to the model"},
+    'machine': {
+        'default': 'polaris',
+        'choices' : ['none', 'tomo','polaris'],
+        'help': "machine to run the inference job"
+    },
   }
 
 MODEL_TYPES['inference']['SwinIRModel'] = {

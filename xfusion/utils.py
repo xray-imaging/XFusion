@@ -76,7 +76,7 @@ def yaml_load(f):
         return yaml.load(f, Loader=ordered_yaml()[0])
 
 def compile_dataset(args):
-    cases_hi = natsorted(list(args.dir_hi.glob('*')))
+    cases_hi = natsorted(list(args.dir_hi_convert.glob('*')))
     for case_hi in tqdm(cases_hi):
         files_hi = natsorted(list(case_hi.glob('*.png')))
         out_case_hi = args.out_dir_hi / case_hi.stem
@@ -85,7 +85,7 @@ def compile_dataset(args):
         Path(out_case_lo).mkdir(exist_ok=True,parents=True)
         for file_hi in files_hi:
             img_hi  = Image.open(file_hi).convert('L')
-            file_lo = args.dir_lo / case_hi.stem / file_hi.name
+            file_lo = args.dir_lo_convert / case_hi.stem / file_hi.name
             img_lo  = Image.open(file_lo).convert('L')
             img_hi  = np.array(img_hi)
             img_lo  = np.array(img_lo)
