@@ -1,39 +1,29 @@
 import os
-#import datetime
-#from omegaconf import OmegaConf
+
 import time
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-#import argparse
+
 import logging
-#from main import get_parser
-#import yaml
-#from collections import OrderedDict
-#from lightning import seed_everything
-#from lightning.pytorch.trainer import Trainer
-#from ldm.util import instantiate_from_config
-#from ldm.models.autoencoder import EDVR
+
 from xfusion.train.basicsr.archs.VideoTransformerSTF_arch import PatchTransformerSTF
 import numpy as np
 import torch
-#import sys
+
 import cv2
-#from distutils.util import strtobool
-#sys.path.insert(0,'/home/beams/FAST/conda/BasicSR_single_channel')
+
 from xfusion.train.basicsr.data import build_dataloader
 from xfusion.train.basicsr.utils import tensor2img
 from xfusion.train.basicsr.utils.dist_util import get_dist_info
 from xfusion.train.basicsr.utils import get_root_logger
 from PIL import Image
 from pathlib import Path
-#from copy import deepcopy
-#import matplotlib as mpl
-#mpl.use('QtAgg')
+
 import matplotlib.pyplot as plt
-#from ldm.data.imagenet import REDSDatasetSTF, VideoTestDatasetSTF
+
 from xfusion.train.basicsr.data.xray_dataset import XrayVideoTestDatasetSTF
-#import argparse
+
 from skimage.metrics import structural_similarity as ssim
 import torch.multiprocessing as mp
 import torch.distributed as dist

@@ -1,3 +1,18 @@
+# Copyright 2018-2022 BasicSR Authors
+
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+
+#        http://www.apache.org/licenses/LICENSE-2.0
+
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+# Modifications Copyright 2024 xfusion authors
+
 import datetime
 import logging
 import math
@@ -19,12 +34,6 @@ from xfusion.train.basicsr.utils import set_random_seed
 from xfusion.train.basicsr.utils.dist_util import get_dist_info, init_dist
 from xfusion.train.basicsr.data.xray_dataset import XrayDatasetSTF, XrayVideoTestDatasetSTF
 from torch.profiler import profile, record_function, ProfilerActivity
-#from distutils.util import strtobool
-#from basicsr.data.reds_dataset import REDSDatasetSTF
-#from basicsr.data.video_test_dataset import VideoTestDatasetSTF
-
-from mpi4py import MPI
-comm = MPI.COMM_WORLD
 
 #TODO: log info to replace print
 def parse_options_(root_path, args, opt):
@@ -394,7 +403,7 @@ def train_pipeline(args, opt):
             total_epochs -= 1
     logger.info(f'Start training from epoch: {start_epoch}, iter: {current_iter}')
     data_timer, iter_timer, full_timer = AvgTimer(), AvgTimer(), FullTimer()
-    comm.barrier()
+
     start_time = time.time()
 
     with torch.profiler.profile(
@@ -454,7 +463,7 @@ def train_pipeline(args, opt):
 
     # end of epoch
     # wait for all processes to resync
-    comm.barrier()
+
     end_time = time.time()
 
     sections = config.XFUSION_PARAMS
