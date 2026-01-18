@@ -170,4 +170,4 @@ xfusion/train/basicsr/metrics/niqe_pris_params.npz
 test.sh
 xfusion/train/RAFT/ops/__pycache__/*
 
-set_affinity_gpu_polaris.sh
+xfusion/set_affinity_gpu_polaris.sh
