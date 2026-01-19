@@ -1,13 +1,14 @@
-:mod:`inference.infer`
-======================
+:mod:`xfusion.inference.infer`
+==============================
 
-.. automodule:: inference.infer
+.. automodule:: xfusion.inference.infer
    :members:
    :show-inheritance:
+   :inherited-members:
    :undoc-members:
 
    .. rubric:: **Functions:**
 
    .. autosummary::
    
-      tensor2img
+      inference_pipeline
