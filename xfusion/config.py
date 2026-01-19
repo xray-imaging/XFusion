@@ -19,12 +19,18 @@ __all__ = ['config_to_list',
            'log_values',
            'parse_known_args',
            'write']
+def list_of_ints(arg):
+    if ',' in arg:
+        return list(arg.split(','))
+    else:
+        return [arg]
 
 CONFIG_FILE_NAME = os.path.join(str(pathlib.Path.home()), 'xfusion.conf')
 XFUSION_HOME = os.path.join(str(pathlib.Path.home()), 'xfusion')
 XFUSION_TRAIN_HOME = os.path.join(str(XFUSION_HOME), 'train')
 XFUSION_INFERENCE_HOME = os.path.join(str(XFUSION_HOME), 'inference')
 XFUSION_LOG_HOME = os.path.join(str(XFUSION_HOME), 'log')
+XFUSION_CALIBRATION_HOME = os.path.join(str(XFUSION_HOME),'calibration')
 
 SECTIONS = OrderedDict()
 
@@ -39,6 +45,12 @@ SECTIONS['general'] = {
         'choices': ['SwinIRModel','EDVRModel'],
         'type': str,
         'help': 'Model type'
+    },
+    'data_type': {
+        'default': 'virtual',
+        'choices': ['actual','virtual'],
+        'type': str,
+        'help': 'Data type'
     },
     'verbose': {
         'default': True,
@@ -67,6 +79,12 @@ SECTIONS['home'] = {
         'type': Path,
         'help': 'name of the home directory for the log files',
         'metavar': 'FILE'},
+    'calibration-home': {
+        'default': XFUSION_CALIBRATION_HOME,
+        'type': Path,
+        'help': 'name of the home directory for the calibration files',
+        'metavar': 'FILE'
+    },
 }
 
 SECTIONS['convert'] = {
@@ -153,7 +171,27 @@ SECTIONS['train'] = {
     'is-train': {
         'default': True,
         'help': "When set train is True",
-        'action': 'store_true'},    
+        'action': 'store_true'},
+    'val_freq': {
+        'default': 5000,
+        'type': int,
+        'help': 'Number of training iterations between two subsequent validations'
+    },
+    'interval_list': {
+        'default': '1',
+        'type': list_of_ints,
+        'help': 'Relative frame separation in the lr images after and before augmentation'
+    },
+    'hi_interval_mult': {
+        'default': 1,
+        'type': int,
+        'help': 'Relative frame separation in the hr images after and before the augmentation'
+    },
+    'poisson_noise_b0_exp': {
+        'default': [],
+        'type': list_of_ints,
+        'help': 'upper and lower bounds of the blank scan factor in log scale'
+    },
   }
 
 MODEL_TYPES = {'train':OrderedDict(),'inference':OrderedDict()}
@@ -232,7 +270,12 @@ MODEL_TYPES['train']['SwinIRModel'] = {'drop_path_rate': {
             'type': int,
             'help': "Number of subsequent iterations to track computation performance for HTA"},}
 
-MODEL_TYPES['train']['EDVRModel'] = {}
+MODEL_TYPES['train']['EDVRModel'] = {
+    'initial_lr': {
+            'default': 2e-4,
+            'type': float,
+            'help': "Initial learning rate"},
+}
 
 
 SECTIONS['download'] = {
@@ -287,7 +330,298 @@ SECTIONS['inference'] = {
         'default': 3,
         'type': int,
         'help': "Number of input low resolution frames to the model"},
+    'machine': {
+        'default': 'polaris',
+        'choices' : ['none', 'tomo','polaris'],
+        'help': "machine to run the inference job"
+    },
   }
+
+SECTIONS['train_calibration'] = {
+    'cal_train_name': {
+        'default': 'raft',
+        'type': str,
+        'help': "name your experiment"
+    },
+    'cal_train_stage': {
+        'default': 'xray_ddm',
+        'type': str,
+        'help': "determines which dataset to use for training"
+    },
+    'cal_train_restore_ckpt': {
+        'default': '',
+        'type': str,
+        'help': "restore checkpoint"
+    },
+    'cal_train_small': {
+        'default': False,
+        'help': 'use small model',
+        'action': 'store_true'
+    },
+    'cal_train_validation': {
+        'default': '',
+        'type': str,
+        'help': "validation datasets",
+        'nargs': '+'
+    },
+    'cal_train_input_dim': {
+        'default': 1,
+        'type': int,
+        'help': "number of channels of model input tensors"
+    },
+    'cal_train_lr': {
+        'default': 0.00002,
+        'type': float,
+        'help': 'initial learning rate'
+    },
+    'cal_train_num_steps': {
+        'default': 100000,
+        'type': int,
+        'help': 'number of training iterations'
+    },
+    'cal_train_batch_size': {
+        'default': 1,
+        'type': int,
+        'help': 'batch size'
+    },
+    'cal_train_device': {
+        'default': 'cuda',
+        'type': str,
+        'help': 'device to use for training / testing'
+    },
+    'cal_train_mixed_precision': {
+        'default': False,
+        'help': 'use mixed precision',
+        'action': 'store_true'
+    },
+    'cal_train_launcher': {
+        'default' : 'none',
+        'choices' : ['none', 'pytorch', 'polaris'],
+        'help': "Job launcher."
+    },
+    'cal_train_iters': {
+        'default': 12,
+        'type': int,
+        'help': 'number of iterations in the refinement of the flow fields'
+    },
+    'cal_train_wdecay': {
+        'default': .00005,
+        'type': float,
+        'help': 'weight decay'
+    },
+    'cal_train_epsilon': {
+        'default': 1e-8,
+        'type': float,
+        'help': 'term added to the denominator to improve numerical stability of optimizer'
+    },
+    'cal_train_clip': {
+        'default': 1.0,
+        'type': float,
+        'help': 'max norm of the model weight gradients to clip at'
+    },
+    'cal_train_dropout': {
+        'default': 0.0,
+        'type': float,
+        'help': 'probability of an element to be zero-ed in the model encoder'
+    },
+    'cal_train_gamma': {
+        'default': 0.8,
+        'type': float,
+        'help': 'exponential weighting in the training loss'
+    },
+    'cal_train_image_root': {
+        'default': '',
+        'type': str,
+        'help': 'root directory of the training images'
+    },
+    'cal_train_meta_info_file': {
+        'default': '',
+        'type': str,
+        'help': 'path to the training image meta data'
+    },
+    'cal_train_window_size': {
+        'default': 128,
+        'type': int,
+        'help': 'window size of the training samples'
+    },
+    'cal_train_dataset_enlarge_ratio': {
+        'default': 1000,
+        'type': int,
+        'help': 'training data enlarge ratio'
+    },
+    'cal_train_save_path': {
+        'default': '',
+        'type': str,
+        'help': 'output directory name'
+    },
+    'cal_train_dist_url': {
+        'default': 'env://',
+        'type': str,
+        'help': 'url used to set up distributed training'
+    },
+    'cal_train_find_unused_parameters': {
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': 'find unused parameters for pytorch ddp'
+    },
+    'cal_train_num_frames': {
+        'default': 3,
+        'type': int,
+        'help': 'number of hr/lr image pairs in each training sample'
+    },
+    'cal_train_evaluator_weights': {
+        'default': '',
+        'type': str,
+        'help': 'spatiotemporal fusion model weights'
+    },
+    'cal_train_flow_weights': {
+        'default': '',
+        'type': str,
+        'help': 'initial flow model weights'
+    },
+    'cal_train_full_weights': {
+        'default': 'none',
+        'type': str,
+        'help': 'initial full model weights'
+    },
+    'cal_train_opt_path': {
+        'default': '',
+        'type': str,
+        'help': 'configurations to construct the evaluator model'
+    },
+    'cal_train_factor': {
+        'default': 1,
+        'type': float,
+        'help': 'weight of the evaluator reconstruction loss in the total training loss'
+    },
+    'cal_train_num_frame_total': {
+        'default': 5,
+        'type': int,
+        'help': 'total number of input images in each training sample'
+    },
+    'cal_train_pixel_size_ratio': {
+        'default': 4,
+        'type': int,
+        'help': 'pixel size ratio between the hr/lr images'
+    },
+    'cal_train_split_encoder': {
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': 'when set the model has separate encoders for the hr/lr input image tensors'
+    },
+    'cal_train_poisson_b0_exponent': {
+        'default': [],
+        'type': list_of_ints,
+        'help': 'upper and lower bounds of the blank scan factor in log scale'
+    },
+    'cal_train_scaling_min': {
+        'default': 'none',
+        'type': str,
+        'help': 'min value of random scaling augmentation'
+    },
+    'cal_train_scaling_max': {
+        'default': 'none',
+        'type': str,
+        'help': 'max value of random scaling augmentation'
+    },
+    'cal_train_rotation_min': {
+        'default': 'none',
+        'type': str,
+        'help': 'min value of random rotation augmentation'
+    },
+    'cal_train_rotation_max': {
+        'default': 'none',
+        'type': str,
+        'help': 'max value of random rotation augmentation'
+    },
+    'cal_train_translation_min': {
+        'default': 'none',
+        'type': str,
+        'help': 'min value of random translation augmentation'
+    },
+    'cal_train_translation_max': {
+        'default': 'none',
+        'type': str,
+        'help': 'max value of random translation augmentation'
+    },
+    'cal_train_mask_valid_for_fusion_ok': {
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': 'when set the tensor is masked before being sent to the fusion model'
+    },
+}
+
+#HACK: flow model hyperparameters are now merged into the general conf
+#HACK: to always make sure the following arguments are unique to the flow model instantiation (i.e., they do not appear elsewhere in the configuration sections)
+#HACK: dropout, alternate_corr, corr_levels, corr_radius
+#TODO: to merge the above args into calibrate
+SECTIONS['calibrate'] = {
+    'cal_model_file': {
+        'default': 'none',
+        'type': Path,
+        'help': "When set the path to the model weights to initialize the calibration model for corresponding point detection"
+    },
+    'cal_dir': {
+        'default': '',
+        'type': Path,
+        'help': "Full path to the dual-detector spatial calibration data"
+    },
+    'cal_id': {
+        'default': 'none',
+        'type': str,
+        'help': "Name of the individual calibration experiment subdirectory"
+    },
+    'tol_pos': {
+        'default': 0.1,
+        'type': float,
+        'help': "Tolerance in the relative deviations in the position indices"
+    },
+    'tol_area': {
+        'default': 0.1,
+        'type': float,
+        'help': "Tolerance in the relative deviations in the segmented grid squares"
+    },
+    'tol_rotation':{
+        'default': 0.06,
+        'type': float,
+        'help': "Threshold in the rotation in radian to perform compensation"
+    },
+    'cal_device': {
+        'default': 0,
+        'type': int,
+        'help': "device id at calibration time"
+    },
+    'small': {
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': 'When set use small model'
+    },
+    'mixed_precision': {
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': 'When set uses mixed precision'
+    },
+    'split_encoder': {
+        'default': True,
+        'type': lambda x: bool(strtobool(x)),
+        'help': 'when set the flow model has separate encoders for the hr/lr input image tensors'
+    },
+    'flow_iters': {
+        'default': 12,
+        'type': int,
+        'help': 'number of iterations in the refinement of the flow fields'
+    },
+    'input_dim': {
+        'default': 1,
+        'type': int,
+        'help': 'number of channels of flow model input tensors'
+    },
+    'window_size': {
+        'default': 384,
+        'type': int,
+        'help': 'window size of the flow model input samples'
+    }
+}
 
 MODEL_TYPES['inference']['SwinIRModel'] = {
         'align_features_ok': {
@@ -315,14 +649,64 @@ MODEL_TYPES['inference']['SwinIRModel'] = {
             'type': int,
             'help': "Multiplier of the original model depth"},}
 MODEL_TYPES['inference']['EDVRModel'] = {}
+#TODO: to cleanly separate configuration parameters based on the model and data at initialization time
+DATA_TYPES = {'train':OrderedDict(),'inference':OrderedDict()}
+DATA_TYPES['train']['virtual'] = {}
+DATA_TYPES['train']['actual'] = {
+    'dataroot_context': {
+        'default': '.',
+        'type': Path,
+        'help': 'Name of the path to the full lr training data with and without matching hr training data'
+    },
+    'meta_info_context': {
+        'default': '.',
+        'type': Path,
+        'help': 'Path to the file relating the frame indices of paired hr and lr images'
+    },
+    'use_nearest_context': {
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': 'When set use near unpaired lr images before and after the time of the reference in each training sample'
+    },
+}
+DATA_TYPES['inference']['virtual'] = {}
+DATA_TYPES['inference']['actual'] = {
+    'traverse-mode':{'default' : 'double',
+        'type': str,
+        'choices': ['continuous','double'],
+        'help': "Rule to iterate over the entire dual-detector image sequence from actual experiments"},
+    'tfm_file':{'default': 'tfm_1_flow_init.npy',
+        'type': str,
+        'help': "Affine transformation matrix for spatial calibration"
+    },
+    'meta_file_scale': {'default': 'scale_factor_1_corrected_flow_init.npy',
+        'type': str,
+        'help': "2D scaling parameters for spatial calibration"
+    },
+    'input_dir': {'default': '',
+        'type': Path,
+        'help': "Full path to the user experiment data"
+    },
+    'case_list': {'default': [],
+        'type': list_of_ints,
+        'help': "Names of the individual experiment subdirectories"
+    },
+    'device': {'default': 0,
+        'type': int,
+        'help': "device id at inference time"
+    },
+    }
 
 HOME_PARAMS = ('home', )
 CONVERT_PARAMS   = ('convert', )
 TRAIN_PARAMS     = ('train', )
 INFERENCE_PARAMS = ('inference', )
 DOWNLOAD_PARAMS = ('download', )
-XFUSION_PARAMS   = ('convert', 'home', 'train', 'inference', 'download')
+CALIBRATION_PARAMS = ('calibrate',)
+TRAIN_CALIBRATION_PARAMS = ('train_calibration',)
+XFUSION_PARAMS   = ('convert', 'home', 'train', 'inference', 'download', 'calibrate', 'train_calibration')
 
+#TODO: add calibrate and train_calibration to the common log file
 NICE_NAMES = ('General', 'Home', 'Convert', 'Train', 'Download', 'Inference')
 
 def make_default_home_dir():
@@ -336,6 +720,9 @@ def make_default_inference_home_dir():
 
 def make_default_log_home_dir():
     SECTIONS['home']['log-home']['default'].mkdir(exist_ok=True, parents=True)
+
+def make_default_calibration_home_dir():
+    SECTIONS['home']['calibration-home']['default'].mkdir(exist_ok=True, parents=True)
 
 def get_config_name():
     """Get the command line --config option."""
@@ -364,6 +751,12 @@ def get_base_log_dirs():
     config.read([config_name])
     return config['home']['log-home']
 
+def get_calibration_dirs():
+    config_name = get_config_name()
+    config = configparser.ConfigParser()
+    config.read([config_name])
+    return config['home']['calibration-home']
+
 def get_inf_data_dirs(dataset):
     config_name = get_config_name()
     config = configparser.ConfigParser()
@@ -376,7 +769,13 @@ def get_model_type():
     config.read([config_name])
     return config['general']['model_type']
 
-def parse_known_args(parser, model_type, subparser=False):
+def get_data_type():
+    config_name = get_config_name()
+    config = configparser.ConfigParser()
+    config.read([config_name])
+    return config['general']['data_type']
+
+def parse_known_args(parser, model_type, data_type, subparser=False):
     """
     Parse arguments from file and then override by the ones specified on the
     command line. Use *parser* for parsing and is *subparser* is True take into
@@ -384,7 +783,7 @@ def parse_known_args(parser, model_type, subparser=False):
     """
     if len(sys.argv) > 1:
         subparser_value = [sys.argv[1]] if subparser else []
-        config_values = config_to_list(model_type, config_name=get_config_name())
+        config_values = config_to_list(model_type, data_type, config_name=get_config_name())
         values = subparser_value + config_values + sys.argv[2:]
         #print(subparser_value, config_values, values)
     else:
@@ -395,7 +794,7 @@ def parse_known_args(parser, model_type, subparser=False):
     return parsed[0]
 
 
-def config_to_list(model_type, config_name=CONFIG_FILE_NAME):
+def config_to_list(model_type, data_type, config_name=CONFIG_FILE_NAME):
     """
     Read arguments from config file and convert them to a list of keys and
     values as sys.argv does when they are specified on the command line.
@@ -442,14 +841,34 @@ def config_to_list(model_type, config_name=CONFIG_FILE_NAME):
                             result.extend((v.strip() for v in value.split(',')))
                         else:
                             result.append('--{}={}'.format(name, value))
+            
+            for name, opts in ((n, o) for n, o in DATA_TYPES[section][data_type].items() if config.has_option(section, n)):
+                value = config.get(section, name)
+
+                if value != '' and value != 'None':
+                    action = opts.get('action', None)
+
+                    if action == 'store_true' and value == 'True':
+                        # Only the key is on the command line for this action
+                        result.append('--{}'.format(name))
+                    
+                    if not action == 'store_true':
+                        if opts.get('nargs', None) == '+':
+                            result.append('--{}'.format(name))
+                            result.extend((v.strip() for v in value.split(',')))
+                        else:
+                            result.append('--{}={}'.format(name, value))
+                    
+
 
     return result
 
 
 class Params(object):
-    def __init__(self, model_type, sections=()):
+    def __init__(self, model_type, data_type, sections=()):
         self.sections = sections + ('general',)
         self.model_type = model_type if model_type is not None else SECTIONS['general']['model_type']['default']
+        self.data_type = data_type if data_type is not None else SECTIONS['general']['data_type']['default']
 
     def add_parser_args(self, parser):
         for section in self.sections:
@@ -460,6 +879,10 @@ class Params(object):
             if section in ['train','inference']:
                 for name in MODEL_TYPES[section][self.model_type]:
                     opts = MODEL_TYPES[section][self.model_type][name]
+                    parser.add_argument('--{}'.format(name), **opts)
+            
+                for name in DATA_TYPES[section][self.data_type]:
+                    opts = DATA_TYPES[section][self.data_type][name]
                     parser.add_argument('--{}'.format(name), **opts)
 
     def add_arguments(self, parser):
@@ -473,7 +896,7 @@ class Params(object):
         return parser.parse_args('')
 
 
-def write(config_file, model_type, args=None, sections=None):
+def write(config_file, model_type, data_type, args=None, sections=None):
     """
     Write *config_file* with values from *args* if they are specified,
     otherwise use the defaults. If *sections* are specified, write values from
@@ -481,6 +904,10 @@ def write(config_file, model_type, args=None, sections=None):
     """
     if model_type == None:
         model_type = SECTIONS['general']['model_type']['default']
+    
+    if data_type == None:
+        data_type = SECTIONS['general']['data_type']['default']
+    
     config = configparser.ConfigParser()
 
     for section in SECTIONS:
@@ -499,6 +926,8 @@ def write(config_file, model_type, args=None, sections=None):
             if name != 'config':
                 if name == 'model_type':
                     value = model_type
+                elif name == 'data_type':
+                    value = data_type
                 config.set(section, prefix + name, str(value))
         
         if section in ['train','inference']:
@@ -511,6 +940,20 @@ def write(config_file, model_type, args=None, sections=None):
                 else:
                     value = opts['default'] if opts['default'] is not None else ''
 
+                prefix = '# ' if value == '' else ''
+
+                if name != 'config':
+                    config.set(section, prefix + name, str(value))
+            
+            for name, opts in DATA_TYPES[section][data_type].items():
+                if args and sections and section in sections and hasattr(args, name.replace('-', '_')):
+                    value = getattr(args, name.replace('-', '_'))
+                    if isinstance(value, list):
+                        print(type(value), value)
+                        value = ', '.join(value)
+                else:
+                    value = opts['default'] if opts['default'] is not None else ''
+                
                 prefix = '# ' if value == '' else ''
 
                 if name != 'config':

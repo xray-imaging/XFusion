@@ -1,3 +1,18 @@
+# Copyright 2018-2022 BasicSR Authors
+
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+
+#        http://www.apache.org/licenses/LICENSE-2.0
+
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+# Modifications Copyright 2024 xfusion authors
+
 import datetime
 import logging
 import math
@@ -19,12 +34,6 @@ from xfusion.train.basicsr.utils import set_random_seed
 from xfusion.train.basicsr.utils.dist_util import get_dist_info, init_dist
 from xfusion.train.basicsr.data.xray_dataset import XrayDatasetSTF, XrayVideoTestDatasetSTF
 from torch.profiler import profile, record_function, ProfilerActivity
-#from distutils.util import strtobool
-#from basicsr.data.reds_dataset import REDSDatasetSTF
-#from basicsr.data.video_test_dataset import VideoTestDatasetSTF
-
-from mpi4py import MPI
-comm = MPI.COMM_WORLD
 
 #TODO: log info to replace print
 def parse_options_(root_path, args, opt):
@@ -190,8 +199,8 @@ def create_train_val_dataloader(opt, logger):
     for phase, dataset_opt in opt['datasets'].items():
         if phase == 'train':
             dataset_enlarge_ratio = dataset_opt.get('dataset_enlarge_ratio', 1)
-            train_set = XrayDatasetSTF(dataset_opt)
-            #train_set = build_dataset(dataset_opt)
+            #train_set = XrayDatasetSTF(dataset_opt)
+            train_set = build_dataset(dataset_opt)
             train_sampler = EnlargedSampler(train_set, opt['world_size'], opt['rank'], dataset_enlarge_ratio)
             train_loader = build_dataloader(
                 train_set,
@@ -260,12 +269,72 @@ def train_pipeline(args, opt):
     print(f"drop path rate is {args.drop_path_rate}")
     opt['network_g']['drop_path_rate'] = args.drop_path_rate
     opt['root_path'] = root_path
-    opt['datasets']['train']['dataroot_gt'] = [str(args.dir_hi_train)] if type(args.dir_hi_train) is not list else [str(dh) for dh in args.dir_hi_train]
-    opt['datasets']['train']['dataroot_lq'] = [str(args.dir_lo_train)] if type(args.dir_lo_train) is not list else [str(dl) for dl in args.dir_lo_train]
-    opt['datasets']['val']['dataroot_gt'] = [str(args.dir_hi_val)] if type(args.dir_hi_val) is not list else [str(dh) for dh in args.dir_hi_val]
-    opt['datasets']['val']['dataroot_lq'] = [str(args.dir_lo_val)] if type(args.dir_lo_val) is not list else [str(dl) for dl in args.dir_lo_val]
-    opt['datasets']['train']['meta_info_file'] = [str(args.path_train_meta_info_file)] if type(args.path_train_meta_info_file) is not list else [str(pt) for pt in args.path_train_meta_info_file]
-    opt['datasets']['val']['meta_info_file'] = [str(args.path_val_meta_info_file)] if type(args.path_val_meta_info_file) is not list else [str(pv) for pv in args.path_val_meta_info_file]
+    if type(args.dir_hi_train) is not list:
+        if str(args.dir_hi_train) != 'none':
+            if opt['datasets']['train']['type'] == 'XrayDatasetSTF':
+                opt['datasets']['train']['dataroot_gt'] = [str(args.dir_hi_train)]
+            else:
+                opt['datasets']['train']['dataroot_gt'] = str(args.dir_hi_train)
+    else:
+        assert opt['datasets']['train']['type'] == 'XrayDatasetSTF'
+        if not any([True if str(dh) == 'none' else False for dh in args.dir_hi_train]):
+            opt['datasets']['train']['dataroot_gt'] = [str(dh) for dh in args.dir_hi_train]
+    
+    if type(args.dir_lo_train) is not list:
+        if str(args.dir_lo_train) != 'none':
+            if opt['datasets']['train']['type'] == 'XrayDatasetSTF':
+                opt['datasets']['train']['dataroot_lq'] = [str(args.dir_lo_train)]
+            else:
+                opt['datasets']['train']['dataroot_lq'] = str(args.dir_lo_train)
+    else:
+        assert opt['datasets']['train']['type'] == 'XrayDatasetSTF'
+        if not any([True if str(dl) == 'none' else False for dl in args.dir_lo_train]):
+            opt['datasets']['train']['dataroot_lq'] = [str(dl) for dl in args.dir_lo_train]
+    
+    if type(args.dir_hi_val) is not list:
+        if str(args.dir_hi_val) != 'none':
+            if opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF':
+                opt['datasets']['val']['dataroot_gt'] = [str(args.dir_hi_val)]
+            else:
+                opt['datasets']['val']['dataroot_gt'] = str(args.dir_hi_val)
+    else:
+        assert opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF'
+        if not any([True if str(dh) == 'none' else False for dh in args.dir_hi_val]):
+            opt['datasets']['val']['dataroot_gt'] = [str(dh) for dh in args.dir_hi_val]
+    
+    if type(args.dir_lo_val) is not list:
+        if str(args.dir_lo_val) != 'none':
+            if opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF':
+                opt['datasets']['val']['dataroot_lq'] = [str(args.dir_lo_val)]
+            else:
+                opt['datasets']['val']['dataroot_lq'] = str(args.dir_lo_val)
+    else:
+        assert opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF'
+        if not any([True if str(dl) == 'none' else False for dl in args.dir_lo_val]):
+            opt['datasets']['val']['dataroot_lq'] = [str(dl) for dl in args.dir_lo_val]
+    
+    if type(args.path_train_meta_info_file) is not list:
+        if str(args.path_train_meta_info_file) != 'none':
+            if opt['datasets']['train']['type'] == 'XrayDatasetSTF':
+                opt['datasets']['train']['meta_info_file'] = [str(args.path_train_meta_info_file)]
+            else:
+                opt['datasets']['train']['meta_info_file'] = str(args.path_train_meta_info_file)
+    else:
+        assert opt['datasets']['train']['type'] == 'XrayDatasetSTF'
+        if not any([True if str(pt) == 'none' else False for pt in args.path_train_meta_info_file]):
+            opt['datasets']['train']['meta_info_file'] = [str(pt) for pt in args.path_train_meta_info_file]
+    
+    if type(args.path_val_meta_info_file) is not list:
+        if str(args.path_val_meta_info_file) != 'none':
+            if opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF':
+                opt['datasets']['val']['meta_info_file'] = [str(args.path_val_meta_info_file)]
+            else:
+                opt['datasets']['val']['meta_info_file'] = str(args.path_val_meta_info_file)
+    else:
+        assert opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF'
+        if not any([True if str(pv) == 'none' else False for pv in args.path_val_meta_info_file]):
+            opt['datasets']['val']['meta_info_file'] = [str(pv) for pv in args.path_val_meta_info_file]
+    
     opt['datasets']['train']['num_worker_per_gpu'] = args.num_workers
     opt['datasets']['train']['batch_size_per_gpu'] = args.batch_size
     opt['train']['optim_g']['lr'] = args.initial_lr
@@ -334,7 +403,7 @@ def train_pipeline(args, opt):
             total_epochs -= 1
     logger.info(f'Start training from epoch: {start_epoch}, iter: {current_iter}')
     data_timer, iter_timer, full_timer = AvgTimer(), AvgTimer(), FullTimer()
-    comm.barrier()
+
     start_time = time.time()
 
     with torch.profiler.profile(
@@ -394,7 +463,7 @@ def train_pipeline(args, opt):
 
     # end of epoch
     # wait for all processes to resync
-    comm.barrier()
+
     end_time = time.time()
 
     sections = config.XFUSION_PARAMS
