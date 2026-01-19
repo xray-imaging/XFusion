@@ -162,6 +162,12 @@ xfusion/inference/logs/*
 xfusion/model/*
 xfusion/inference/swin_vit_exp.*
 xfusion/train/swin_vit_exp.*
-
+xfusion/train/basicsr/data/meta_info/*
 nohup_testrun7.out
 nohup_testrun8.out
+xfusion/train/RAFT/core/datasets.py
+xfusion/train/basicsr/metrics/niqe_pris_params.npz
+test.sh
+xfusion/train/RAFT/ops/__pycache__/*
+
+xfusion/set_affinity_gpu_polaris.sh
