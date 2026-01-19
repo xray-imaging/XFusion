@@ -16,7 +16,13 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "sphinxcontrib.bibtex",
 ]
+
+bibtex_bibfiles = [
+    'source/bibtex/cite.bib',
+    'source/bibtex/ref.bib',
+    ]
 
 autosummary_generate = True
 
@@ -58,9 +64,6 @@ html_theme_options = {
     "style_nav_header_background": "#4f8fb8ff",
     "collapse_navigation": False,
     "logo_only": True,
-
-    # Enable "Edit on GitHub" in the RTD theme
-    "display_github": True,
 }
 
 # Make the "Edit on GitHub" link point to your repo and docs path

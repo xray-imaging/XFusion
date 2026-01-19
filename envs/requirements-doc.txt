@@ -4,10 +4,13 @@
 sphinx==7.4.7
 sphinx-rtd-theme>=2,<3
 
-# Your docs extensions (keep only what you actually use)
+# Bibliography / citations
 sphinxcontrib-bibtex
-nbsphinx
 pybtex
+pybtex-docutils
+
+# Other docs extensions (keep only what you actually use)
+nbsphinx
 
 # Needed so autodoc/autosummary can import your code
 numpy
