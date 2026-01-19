@@ -1,2 +1,3 @@
+# Minimal runtime requirements (keep light; no docs tools here)
 numpy
-pytorch
+pyyaml

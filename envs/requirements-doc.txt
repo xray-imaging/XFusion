@@ -1,6 +1,26 @@
-sphinx
-sphinx_rtd_theme
+# Docs build requirements (Read the Docs)
+
+# Core docs tooling
+sphinx==7.4.7
+sphinx-rtd-theme>=2,<3
+
+# Your docs extensions (keep only what you actually use)
 sphinxcontrib-bibtex
 nbsphinx
 pybtex
 
+# Needed so autodoc/autosummary can import your code
+numpy
+pyyaml
+
+# Pure-Python / lightweight deps often imported by your modules
+tqdm
+natsort
+einops
+timm
+scipy
+pillow
+scikit-image
+opencv-python-headless
+
+# NOTE: intentionally not installing torch/torchvision here; you are mocking them in conf.py
