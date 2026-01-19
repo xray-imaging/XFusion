@@ -59,7 +59,7 @@ import argparse
 from xfusion import log
 from xfusion import config
 from xfusion import utils
-from xfusion.train import train_reds_gray, train_simple_gray4_VSWINIR_xray_multinode_ddp
+from xfusion.train import train_reds_gray, train_simple_gray4_VSWINIR_xray_multinode_ddp, train_xray_finetune, train_simple_gray4_VSWINIR_xray_multinode_ddp_new4, train_simple_gray6_xfull_mult_poiss
 
 
 from os import path as osp
@@ -86,7 +86,10 @@ def init(args):
         args.log_home.mkdir(exist_ok=True, parents=True)
     else:
         config.make_default_log_home_dir()
-
+    if hasattr(args, 'calibration_home'):
+        args.calibration_home.mkdir(exist_ok=True, parents=True)
+    else:
+        config.make_default_calibration_home_dir()
     logger_file = os.path.join(args.log_home,'xfusion.log')
     
     #HACK: allow continuous logging
@@ -98,10 +101,15 @@ def init(args):
     #    raise RuntimeError("{0} already exists".format(logger_file))
     
     if hasattr(args, 'model_type'):
-        config.write(str(args.config), args.model_type)
+        if hasattr(args, 'data_type'):
+            config.write(str(args.config), args.model_type, args.data_type)
+        else:
+            config.write(str(args.config), args.model_type, None)
     else:
-        config.write(str(args.config), None)
-
+        if hasattr(args, 'data_type'):
+            config.write(str(args.config), None, args.data_type)
+        else:
+            config.write(str(args.config), None, None)
 
 def convert(args):
     utils.compile_dataset(args)
@@ -110,20 +118,39 @@ def convert(args):
 def train(args):
     from xfusion.utils import yaml_load
     opt = yaml_load(args.opt)
-    if opt['model_type'] == 'EDVRModel':
-        train_reds_gray.train_pipeline(args, opt)
-    elif opt['model_type'] == 'SwinIRModel':
-        train_simple_gray4_VSWINIR_xray_multinode_ddp.train_pipeline(args, opt)
+    if args.data_type == 'virtual':
+        if opt['model_type'] == 'EDVRModel':
+            train_reds_gray.train_pipeline(args, opt)
+        elif opt['model_type'] == 'SwinIRModel':
+            train_simple_gray4_VSWINIR_xray_multinode_ddp.train_pipeline(args, opt)
+    elif args.data_type == 'actual':
+        if opt['model_type'] == 'SwinIRModel':
+            train_simple_gray4_VSWINIR_xray_multinode_ddp_new4.train_pipeline(args,opt)
+        elif opt['model_type'] == 'EDVRModel':
+            train_simple_gray6_xfull_mult_poiss.train_pipeline(args, opt)
 
-def inference(args):    
-    if args.model_type == 'EDVRModel':
-        from xfusion.inference import infer
-        infer.inference_pipeline(args)
-    elif args.model_type == 'SwinIRModel':
-        from xfusion.inference import infer_swin_ddp
-        from xfusion.utils import get_time_str
-        ts = get_time_str()
-        infer_swin_ddp.run_inference(ts,args)
+def train_calibration(args):
+    import torch
+    import numpy as np
+    from xfusion.train.RAFT.core.utils.dist_utils import get_rank
+    torch.manual_seed(1234+get_rank())
+    np.random.seed(1234+get_rank())
+    train_xray_finetune.train(args)
+    
+
+def inference(args):
+    if args.data_type == 'virtual':
+        if args.model_type == 'EDVRModel':
+            from xfusion.inference import infer
+            infer.inference_pipeline(args)
+        elif args.model_type == 'SwinIRModel':
+            from xfusion.inference import infer_swin_ddp
+            from xfusion.utils import get_time_str
+            ts = get_time_str()
+            infer_swin_ddp.run_inference(ts,args)
+    elif args.data_type == 'actual':
+        from xfusion.inference import infer_with_auto_calibration_main4_continuous2
+        infer_with_auto_calibration_main4_continuous2.run_inference(args)
 
 def download(args):
     http = urllib3.PoolManager()
@@ -147,6 +174,10 @@ def download(args):
         path_rename = str((zip_file_path.parent / dirname[0]).parent)+'_b0_0'
         os.rename(path_name,path_rename)
 
+def calibrate(args):
+    from xfusion.inference import estimate_transformation_from_calibrator_flow_init2_lbl_outliers
+    estimate_transformation_from_calibrator_flow_init2_lbl_outliers.run_calibration(args)
+
 def main():
 
     # This is just to print nice logger messages
@@ -165,19 +196,26 @@ def main():
     train_params     = config.TRAIN_PARAMS
     inference_params = config.INFERENCE_PARAMS
     download_params = config.DOWNLOAD_PARAMS
+    calibration_params = config.CALIBRATION_PARAMS
+    train_calibration_param = config.TRAIN_CALIBRATION_PARAMS
 
     cmd_parsers = [
-        ('init',       init,       home_params,      "Create configuration file and home directory"),
-        ('convert',    convert,    convert_params,   "Convert training images to gray scale"),
-        ('train',      train,      train_params,     "Train"),
-        ('download',   download,   download_params,  "Download"),
-        ('inference',  inference,  inference_params, "Inference"),
+        ('init',              init,              home_params,             "Create configuration file and home directory"),
+        ('convert',           convert,           convert_params,          "Convert training images to gray scale"),
+        ('train',             train,             train_params,            "Train"),
+        ('download',          download,          download_params,         "Download"),
+        ('train_calibration', train_calibration, train_calibration_param, "Train calibration model"),
+        ('calibrate',         calibrate,         calibration_params,      "Calibrate"),
+        ('inference',         inference,         inference_params,        "Inference"),
     ]
 
     subparsers = parser.add_subparsers(title="Commands", metavar='')
 
-    # model type is kept fixed until init is involked again
+    # model type is kept fixed until init is invoked again
     model_type = None
+    # data type is kept fixed until init is invoked again
+    data_type = None
+
     if sys.argv[1] == 'init':
         config_name = config.get_config_name()
         if os.path.exists(config_name):
@@ -188,19 +226,27 @@ def main():
         for i, arg in enumerate(sys.argv):
             if arg == '--model_type':
                 model_type = sys.argv[i+1]
+        
+            if arg == '--data_type':
+                data_type = sys.argv[i+1]
     else:
         model_type = config.get_model_type()
+        data_type = config.get_data_type()
     
+
     for cmd, func, sections, text in cmd_parsers:
-        cmd_params = config.Params(model_type, sections=sections)
+        cmd_params = config.Params(model_type, data_type, sections=sections)
         cmd_parser = subparsers.add_parser(cmd, help=text, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         cmd_parser = cmd_params.add_arguments(cmd_parser)
         cmd_parser.set_defaults(_func=func)
 
     if sys.argv[1] == 'init' and model_type == None:
         model_type = cmd_params.model_type
+    
+    if sys.argv[1] == 'init' and data_type == None:
+        data_type = cmd_params.data_type
 
-    args = config.parse_known_args(parser, model_type, subparser=True)
+    args = config.parse_known_args(parser, model_type, data_type, subparser=True)
     print(f"parsed args are: {args}")
 
     try:
@@ -211,7 +257,8 @@ def main():
         # undate globus.config file
         sections = config.XFUSION_PARAMS
         print(f"model type is {model_type}")
-        config.write(args.config, model_type, args=args, sections=sections)
+        print(f"data type is {data_type}")
+        config.write(args.config, model_type, data_type, args=args, sections=sections)
     except RuntimeError as e:
         log.error(str(e))
         sys.exit(1)

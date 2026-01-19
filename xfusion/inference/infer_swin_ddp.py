@@ -1,39 +1,29 @@
 import os
-#import datetime
-#from omegaconf import OmegaConf
+
 import time
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-#import argparse
+
 import logging
-#from main import get_parser
-#import yaml
-#from collections import OrderedDict
-#from lightning import seed_everything
-#from lightning.pytorch.trainer import Trainer
-#from ldm.util import instantiate_from_config
-#from ldm.models.autoencoder import EDVR
+
 from xfusion.train.basicsr.archs.VideoTransformerSTF_arch import PatchTransformerSTF
 import numpy as np
 import torch
-#import sys
+
 import cv2
-#from distutils.util import strtobool
-#sys.path.insert(0,'/home/beams/FAST/conda/BasicSR_single_channel')
+
 from xfusion.train.basicsr.data import build_dataloader
 from xfusion.train.basicsr.utils import tensor2img
 from xfusion.train.basicsr.utils.dist_util import get_dist_info
 from xfusion.train.basicsr.utils import get_root_logger
 from PIL import Image
 from pathlib import Path
-#from copy import deepcopy
-#import matplotlib as mpl
-#mpl.use('QtAgg')
+
 import matplotlib.pyplot as plt
-#from ldm.data.imagenet import REDSDatasetSTF, VideoTestDatasetSTF
+
 from xfusion.train.basicsr.data.xray_dataset import XrayVideoTestDatasetSTF
-#import argparse
+
 from skimage.metrics import structural_similarity as ssim
 import torch.multiprocessing as mp
 import torch.distributed as dist
@@ -44,11 +34,14 @@ def run_inference(ts, args):
 
     if mp.get_start_method(allow_none=True) is None:
         mp.set_start_method('spawn')
-    #rank = int(os.environ['RANK'])
-    rank = int(os.environ.get('PMI_RANK',-1))
+    if args.machine == 'tomo':
+        rank = int(os.environ['RANK'])
+        world_size = torch.cuda.device_count()
+    elif args.machine == 'polaris':
+        rank = int(os.environ.get('PMI_RANK',-1))
+        world_size = int(os.environ.get('NTOTRANKS',-1))
     rank_ = 0
-    #num_gpus = torch.cuda.device_count()
-    world_size = int(os.environ.get('NTOTRANKS',-1))
+    
     #torch.cuda.set_device(rank)
     dist.init_process_group(backend='nccl', rank=rank,world_size=world_size)
 
@@ -145,6 +138,9 @@ def run_inference(ts, args):
             test_set, dataset_opt, num_gpu=opt['num_gpu'], dist=opt['dist'], sampler=None, seed=opt['manual_seed'])
         test_loaders.append(test_loader)
 
+
+    logger.info(f"found {len(test_loader.dataset)} images")
+    logger.info(f"rank is {rank} and world size is {world_size}")
     for test_loader in test_loaders:
         #test_set_name = test_loader.dataset.opt['name']
         dataset = test_loader.dataset
