@@ -2,60 +2,61 @@
 Install
 =======
 
-This section covers the basics of how to download and install `XFusion <https://github.com/xray-imaging/XFusion>`_.
+This section covers the basics of how to install `XFusion <https://github.com/xray-imaging/XFusion>`_.
 
-.. contents:: Contents:
+.. contents:: Contents
    :local:
 
-Installing from source
-======================
+Prerequisites
+=============
 
-Install from `Anaconda <https://www.anaconda.com/distribution/>`_ > python3.9
+* Python 3.9+ (examples below use conda)
+* Git
+
+Installing from source (conda)
+==============================
 
 Create and activate a dedicated conda environment::
 
-    (base) $ conda create --name xfusion python=3.9
-    (base) $ conda activate xfusion
-    (xfusion) $ 
+    conda create -n xfusion python=3.9
+    conda activate xfusion
 
-Clone the  `XFusion <https://github.com/xray-imaging/XFusion>`_ repository
+Clone the repository::
 
-::
-
-    (xfusion) $ git clone https://github.com/xray-imaging/XFusion XFusion
+    git clone https://github.com/xray-imaging/XFusion.git
+    cd XFusion
 
 Install XFusion::
 
-    (xfusion) $ cd XFusion
-    (xfusion) $ pip install .
+    pip install .
 
-Install all packages listed in the ``env/requirements.txt`` file::
+Install runtime dependencies (as needed)
+========================================
 
-    (xfusion) $ conda install numpy
-    (xfusion) $ conda install add modules
+XFusion depends on a number of scientific Python packages. If you maintain a file
+such as ``envs/requirements.txt`` and/or ``envs/requirements-doc.txt``, install those
+dependencies as appropriate for your use case.
+
+For example, with conda::
+
+    conda install -c conda-forge numpy pyyaml
+
+If you prefer pip for dependencies::
+
+    pip install -r envs/requirements.txt
 
 Test the installation
 =====================
 
+After installation, verify the command-line interface is available::
 
+    xfusion --help
 
 Update
 ======
 
-**XFusion** is constantly updated to include new features. To update your locally installed version::
+To update your local checkout::
 
-    (xfusion) $ cd XFusion
-    (xfusion) $ git pull
-    (xfusion) $ pip install .
-
-
-Dependencies
-============
-
-Install the following package::
-
-    (xfusion) $ conda install numpy
-    (xfusion) $ conda install add modules
-
-
-
+    cd XFusion
+    git pull
+    pip install .

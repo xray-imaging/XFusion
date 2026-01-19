@@ -7,10 +7,11 @@ for `XFusion <https://github.com/decarlof/XFusion>`_.
 .. rubric:: **XFusion Modules:**
 
 .. toctree::
+   :maxdepth: 2
 
    api/xfusion.infer
 
-.. automodule:: inference
+.. automodule:: xfusion.inference
    :members:
    :undoc-members:
-   :show-inheritance: 
+   :show-inheritance:
