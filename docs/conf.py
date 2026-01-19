@@ -58,6 +58,18 @@ html_theme_options = {
     "style_nav_header_background": "#4f8fb8ff",
     "collapse_navigation": False,
     "logo_only": True,
+
+    # Enable "Edit on GitHub" in the RTD theme
+    "display_github": True,
+}
+
+# Make the "Edit on GitHub" link point to your repo and docs path
+html_context = {
+    "display_github": True,
+    "github_user": "xray-imaging",
+    "github_repo": "XFusion",
+    "github_version": "main",   # change to "master" if that's your default branch
+    "conf_py_path": "/docs/",   # path in the repo to the docs/ folder
 }
 
 htmlhelp_basename = project + "doc"
