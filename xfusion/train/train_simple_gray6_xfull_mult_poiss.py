@@ -36,7 +36,8 @@ def parse_options_(root_path,args,opt):
     
     import random
     from xfusion.utils import _postprocess_yml_value
-
+    if args.force_yml == 'none':
+        args.force_yml = None
     # distributed settings
     if args.launcher == 'none':
         print(f"debugging...{opt}")
@@ -213,6 +214,94 @@ def train_pipeline(args,opt):
     opt['train']['total_iter'] /= args.iter_div_factor
     opt['train']['optim_g']['lr'] = args.initial_lr
     opt['val']['val_freq'] = args.val_freq
+        
+    if type(args.dir_hi_train) is not list:
+        if str(args.dir_hi_train) not in ['none','.']:
+            if opt['datasets']['train']['type'] == 'XrayDatasetSTF':
+                opt['datasets']['train']['dataroot_gt'] = [str(args.dir_hi_train)]
+            else:
+                opt['datasets']['train']['dataroot_gt'] = str(args.dir_hi_train)
+    else:
+        assert opt['datasets']['train']['type'] == 'XrayDatasetSTF'
+        if not any([True if str(dh) in ['none','.'] else False for dh in args.dir_hi_train]):
+            opt['datasets']['train']['dataroot_gt'] = [str(dh) for dh in args.dir_hi_train]
+    
+    if type(args.dir_lo_train) is not list:
+        if str(args.dir_lo_train) not in ['none','.']:
+            if opt['datasets']['train']['type'] == 'XrayDatasetSTF':
+                opt['datasets']['train']['dataroot_lq'] = [str(args.dir_lo_train)]
+            else:
+                opt['datasets']['train']['dataroot_lq'] = str(args.dir_lo_train)
+    else:
+        assert opt['datasets']['train']['type'] == 'XrayDatasetSTF'
+        if not any([True if str(dl) in ['none','.'] else False for dl in args.dir_lo_train]):
+            opt['datasets']['train']['dataroot_lq'] = [str(dl) for dl in args.dir_lo_train]
+    
+    if type(args.dir_hi_val) is not list:
+        if str(args.dir_hi_val) not in ['none','.']:
+            if opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF':
+                opt['datasets']['val']['dataroot_gt'] = [str(args.dir_hi_val)]
+            else:
+                opt['datasets']['val']['dataroot_gt'] = str(args.dir_hi_val)
+    else:
+        assert opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF'
+        if not any([True if str(dh) in ['none','.'] else False for dh in args.dir_hi_val]):
+            opt['datasets']['val']['dataroot_gt'] = [str(dh) for dh in args.dir_hi_val]
+    
+    if type(args.dir_lo_val) is not list:
+        if str(args.dir_lo_val) not in ['none','.']:
+            if opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF':
+                opt['datasets']['val']['dataroot_lq'] = [str(args.dir_lo_val)]
+            else:
+                opt['datasets']['val']['dataroot_lq'] = str(args.dir_lo_val)
+    else:
+        assert opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF'
+        if not any([True if str(dl) in ['none','.'] else False for dl in args.dir_lo_val]):
+            opt['datasets']['val']['dataroot_lq'] = [str(dl) for dl in args.dir_lo_val]
+    
+    if type(args.path_train_meta_info_file) is not list:
+        if str(args.path_train_meta_info_file) not in ['none','.']:
+            if opt['datasets']['train']['type'] == 'XrayDatasetSTF':
+                opt['datasets']['train']['meta_info_file'] = [str(args.path_train_meta_info_file)]
+            else:
+                opt['datasets']['train']['meta_info_file'] = str(args.path_train_meta_info_file)
+    else:
+        assert opt['datasets']['train']['type'] == 'XrayDatasetSTF'
+        if not any([True if str(pt) in ['none','.'] else False for pt in args.path_train_meta_info_file]):
+            opt['datasets']['train']['meta_info_file'] = [str(pt) for pt in args.path_train_meta_info_file]
+    
+    if type(args.path_val_meta_info_file) is not list:
+        if str(args.path_val_meta_info_file) not in ['none','.']:
+            if opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF':
+                opt['datasets']['val']['meta_info_file'] = [str(args.path_val_meta_info_file)]
+            else:
+                opt['datasets']['val']['meta_info_file'] = str(args.path_val_meta_info_file)
+    else:
+        assert opt['datasets']['val']['type'] == 'XrayVideoTestDatasetSTF'
+        if not any([True if str(pv) in ['none','.'] else False for pv in args.path_val_meta_info_file]):
+            opt['datasets']['val']['meta_info_file'] = [str(pv) for pv in args.path_val_meta_info_file]
+
+    if type(args.dataroot_context) is not list:
+        if str(args.dataroot_context) not in ['none','.']:
+            if opt['datasets']['train']['type'] == 'XrayDatasetSTF':
+                opt['datasets']['train']['dataroot_context'] = [str(args.dataroot_context)]
+            else:
+                opt['datasets']['train']['dataroot_context'] = str(args.dataroot_context)
+    else:
+        assert opt['datasets']['train']['type'] == 'XrayDatasetSTF'
+        if not any([True if str(dc) in ['none','.'] else False for dc in args.dataroot_context]):
+            opt['datasets']['train']['dataroot_context'] = [str(dc) for dc in args.dataroot_context]
+
+    if type(args.meta_info_context) is not list:
+        if str(args.meta_info_context) not in ['none','.']:
+            if opt['datasets']['train']['type'] == 'XrayDatasetSTF':
+                opt['datasets']['train']['meta_info_context'] = [str(args.meta_info_context)]
+            else:
+                opt['datasets']['train']['meta_info_context'] = str(args.meta_info_context)
+    else:
+        assert opt['datasets']['train']['type'] == 'XrayDatasetSTF'
+        if not any([True if str(mic) in ['none','.'] else False for mic in args.meta_info_context]):
+            opt['datasets']['train']['meta_info_context'] = [str(mic) for mic in args.meta_info_context]
     if args.poisson_noise_b0_exp is not None:
         opt['datasets']['train']['poisson_noise_b0_exp'] = args.poisson_noise_b0_exp
     torch.backends.cudnn.benchmark = True

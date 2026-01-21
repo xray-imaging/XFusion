@@ -59,10 +59,10 @@ def run_inference(ts, args):
 
     opt['network_g']['embed_dim'] = args.embed_dim
     opt['network_g']['num_feat_ext'] = args.embed_dim
-    opt['network_g']['num_frame'] = args.num_frame
+    opt['network_g']['num_frame'] = args.num_frame_infer
     
     opt['network_g']['depths'] = [d * args.scale_depth for d in opt['network_g']['depths']]
-    opt['network_g']['window_size'][0] += (args.num_frame - 3)
+    opt['network_g']['window_size'][0] += (args.num_frame_infer - 3)
     opt['network_g']['window_size'][1:] = [args.window_size_spatial] * len(opt['network_g']['window_size'][1:])
     
     opt['network_g']['num_heads'] = [int(np.ceil(h * args.scale_mha)) for h in opt['network_g']['num_heads']]
@@ -75,7 +75,7 @@ def run_inference(ts, args):
     dataroot = config.get_inf_data_dirs(img_class)
     inf_home_dir = Path(dataroot).parent
 
-    out_dir = Path(inf_home_dir / f'{test_set_name}_{mode}_align_{args.align_features_ok}_prepostx_fixed_lr_r_{lo_frame_sep}_hr_d_{hi_frame_sep*2}_b0_{b0}_em_{args.embed_dim}_nf_{args.num_frame}_dep_{args.scale_depth}_nh_{args.scale_mha}_win_{args.window_size_spatial}_model_{args.model_file.parent.stem}_ddp_swinVRHP_rem1_{ts}')
+    out_dir = Path(inf_home_dir / f'{test_set_name}_{mode}_align_{args.align_features_ok}_prepostx_fixed_lr_r_{lo_frame_sep}_hr_d_{hi_frame_sep*2}_b0_{b0}_em_{args.embed_dim}_nf_{args.num_frame_infer}_dep_{args.scale_depth}_nh_{args.scale_mha}_win_{args.window_size_spatial}_model_{args.model_file.parent.stem}_ddp_swinVRHP_rem1_{ts}')
     out_dir.mkdir(exist_ok=True,parents=True)
 
     log_file = os.path.join(out_dir, f"inference.log")
@@ -129,7 +129,7 @@ def run_inference(ts, args):
         #    continue
         dataset_opt['scale'] = 4
         dataset_opt['gt_size'] = gt_size[:2]
-        dataset_opt['num_frame'] = args.num_frame
+        dataset_opt['num_frame'] = args.num_frame_infer
         #test_set = VideoTestDatasetSTF(dataset_opt)
         #test_set = build_dataset(dataset_opt)
         test_set = XrayVideoTestDatasetSTF(dataset_opt)

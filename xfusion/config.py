@@ -21,10 +21,18 @@ __all__ = ['config_to_list',
            'write']
 def list_of_ints(arg):
     if ',' in arg:
+        return list(map(int,arg.split(',')))
+    else:
+        if arg.lower() != 'none':
+            return [int(arg)]
+        else:
+            return None
+
+def list_of_strs(arg):
+    if ',' in arg:
         return list(arg.split(','))
     else:
         return [arg]
-
 CONFIG_FILE_NAME = os.path.join(str(pathlib.Path.home()), 'xfusion.conf')
 XFUSION_HOME = os.path.join(str(pathlib.Path.home()), 'xfusion')
 XFUSION_TRAIN_HOME = os.path.join(str(XFUSION_HOME), 'train')
@@ -188,10 +196,49 @@ SECTIONS['train'] = {
         'help': 'Relative frame separation in the hr images after and before the augmentation'
     },
     'poisson_noise_b0_exp': {
-        'default': [],
+        'default': 'none',
         'type': list_of_ints,
         'help': 'upper and lower bounds of the blank scan factor in log scale'
     },
+     # newly added ddp configs
+    'iter_div_factor': {
+            'default': 10,
+            'type': int,
+            'help': "Divisor of the total number of iterations"
+    },
+    'batch_size': {
+            'default': 1,
+            'type': int,
+            'help': "Number of samples in a batch"
+    },
+    'num_workers': {
+            'default': 3,
+            'type': int,
+            'help': "Number of workers for data loader"},
+    'warmup_iter': {
+        'default': -1,
+        'type': int,
+        'help': "Number of iterations for training warm up"},
+    'dataset_enlarge_ratio': {
+        'default': 10.0,
+        'type': float,
+        'help': "Multiplier of the original number of training samples"},
+    'sub_dataset': {
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': "When set the original training data are randomly sub-sampled for training"},
+    'sub_dataset_frac': {
+        'default': 1.0,
+        'type': float,
+        'help': "Fraction of the original training data set size to sub-sample"},
+    'single_epoch_ok': {
+        'default': False,
+        'type': lambda x: bool(strtobool(x)),
+        'help': "If to only train data for one epoch"},
+    'profiler_iter_num': {
+        'default': 3,
+        'type': int,
+        'help': "Number of subsequent iterations to track computation performance for HTA"},
   }
 
 MODEL_TYPES = {'train':OrderedDict(),'inference':OrderedDict()}
@@ -225,50 +272,17 @@ MODEL_TYPES['train']['SwinIRModel'] = {'drop_path_rate': {
             'type': int,
             'help': "Size of convolution window if used in the vit residual connection"},
         # newly added ddp configs
-        'iter_div_factor': {
-            'default': 10,
-            'type': int,
-            'help': "Divisor of the total number of iterations"},
+        
         'num_frame': {
             'default': 3,
             'type': int,
             'help': "Number of input low resolution frames to the model"},
-        'batch_size': {
-            'default': 1,
-            'type': int,
-            'help': "Number of samples in a batch"},
+        
         'initial_lr': {
-            'default': 2e-4,
+            'default': 5e-6,
             'type': float,
             'help': "Initial learning rate"},
-        'num_workers': {
-            'default': 3,
-            'type': int,
-            'help': "Number of workers for data loader"},
-        'warmup_iter': {
-            'default': -1,
-            'type': int,
-            'help': "Number of iterations for training warm up"},
-        'dataset_enlarge_ratio': {
-            'default': 10.0,
-            'type': float,
-            'help': "Multiplier of the original number of training samples"},
-        'sub_dataset': {
-            'default': False,
-            'type': lambda x: bool(strtobool(x)),
-            'help': "When set the original training data are randomly sub-sampled for training"},
-        'sub_dataset_frac': {
-            'default': 1.0,
-            'type': float,
-            'help': "Fraction of the original training data set size to sub-sample"},
-        'single_epoch_ok': {
-            'default': False,
-            'type': lambda x: bool(strtobool(x)),
-            'help': "If to only train data for one epoch"},
-        'profiler_iter_num': {
-            'default': 3,
-            'type': int,
-            'help': "Number of subsequent iterations to track computation performance for HTA"},}
+        }
 
 MODEL_TYPES['train']['EDVRModel'] = {
     'initial_lr': {
@@ -326,7 +340,7 @@ SECTIONS['inference'] = {
         'default': 'none',
         'type': Path,
         'help': "When set the path to the model weights to initialize the model"},
-    'num_frame': {
+    'num_frame_infer': {
         'default': 3,
         'type': int,
         'help': "Number of input low resolution frames to the model"},
@@ -510,7 +524,7 @@ SECTIONS['train_calibration'] = {
         'help': 'when set the model has separate encoders for the hr/lr input image tensors'
     },
     'cal_train_poisson_b0_exponent': {
-        'default': [],
+        'default': 'none',
         'type': list_of_ints,
         'help': 'upper and lower bounds of the blank scan factor in log scale'
     },
@@ -688,7 +702,7 @@ DATA_TYPES['inference']['actual'] = {
         'help': "Full path to the user experiment data"
     },
     'case_list': {'default': [],
-        'type': list_of_ints,
+        'type': list_of_strs,
         'help': "Names of the individual experiment subdirectories"
     },
     'device': {'default': 0,

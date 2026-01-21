@@ -20,7 +20,7 @@ import os
 from scipy.ndimage import convolve
 from scipy.special import gamma
 
-from xfusion.train.basicsr.metrics.metric_util import reorder_image, to_y_channel
+from xfusion.train.basicsr.metrics.metric_util import reorder_image
 from xfusion.train.basicsr.utils.matlab_functions import imresize
 from xfusion.train.basicsr.utils.registry import METRIC_REGISTRY
 
@@ -198,7 +198,7 @@ def calculate_niqe(img, crop_border, input_order='HWC', convert_to='y', **kwargs
     if input_order != 'HW':
         img = reorder_image(img, input_order=input_order)
         if convert_to == 'y':
-            img = to_y_channel(img)
+            raise Exception('not implemented yet...')
         elif convert_to == 'gray':
             img = cv2.cvtColor(img / 255., cv2.COLOR_BGR2GRAY) * 255.
         img = np.squeeze(img)

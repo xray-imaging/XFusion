@@ -1,0 +1,143 @@
+# Copyright 2018-2022 BasicSR Authors
+
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+
+#        http://www.apache.org/licenses/LICENSE-2.0
+
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+# Modifications Copyright 2025 xfusion authors
+
+# general settings
+name: train_SwinVR_STFx4_scratch_P48W8_DIV2K_500k_B4G8_s18_x2_0.4
+model_type: SwinIRModel
+scale: 4
+num_gpu: 4
+manual_seed: 0
+
+# dataset and data loader settings
+datasets:
+  train:
+    name: XRAY
+    type: XrayDatasetSTF
+    flag: grayscale
+    dataroot_gt: [/train/HR]
+    dataroot_lq: [/train/LR]
+    dataroot_context: [/train/LRC]
+    dataroot_flow: ~
+    meta_info_file: [meta_info_xray_GT_u1.txt]
+    meta_info_context: [context_map.csv]
+    use_nearest_context: true
+    val_partition: official #REDS4  # set to 'official' when use the official validation partition
+    io_backend:
+      type: disk
+
+    num_frame: 3
+    num_frame_hi: 2
+    gt_size: 96
+    interval_list: [1]
+    hi_interval_mult: 1
+    random_reverse: false
+    use_hflip: true
+    use_rot: true
+    use_local_renorm: false
+    poisson_noise_b0_exp: [1,7]
+
+    # data loader
+    num_worker_per_gpu: 3
+    batch_size_per_gpu: 1
+    dataset_enlarge_ratio: 400
+    prefetch_mode: ~
+
+  val:
+    name: XRAY
+    type: XrayVideoTestDatasetSTF
+    flag: grayscale
+    dataroot_gt: [/val/HR]
+    dataroot_lq: [/val/LR]
+    meta_info_file: [meta_info_ADDMA_test_GT.txt] #basicsr/data/meta_info/meta_info_REDS4_test_GT.txt
+    # change to 'meta_info_REDSofficial4_test_GT' when use the official validation partition
+    io_backend:
+      type: disk
+
+    cache_data: false
+    num_frame: 3
+    num_frame_hi: 2
+    padding: reflection_circle
+    use_local_renorm: false
+
+# network structures
+network_g:
+  type: PatchTransformerSTF
+  upscale: 4
+  num_in_ch: 1
+  num_frame: 3
+  #img_size: 48
+  window_size: [5,8,8]
+  #img_range: 1.
+  depths: [2,2,18,2]
+  embed_dim: 192
+  num_heads: [3,3,3,3]
+  mlp_ratio: 2
+  upsampler: 'pixelshuffle'
+  resi_connection: '1conv'
+
+# path
+path:
+  pretrain_network_g: net_g_latest.pth
+  strict_load_g: true
+  resume_state: ~
+
+# training settings
+train:
+  ema_decay: 0.999
+  optim_g:
+    type: Adam
+    lr: !!float 2e-4
+    weight_decay: 0
+    betas: [0.9, 0.99]
+
+  scheduler:
+    type: CosineAnnealingRestartLR
+    periods: [300000]
+    restart_weights: [1]
+    eta_min: !!float 1e-7
+
+  total_iter: 300000
+  warmup_iter: -1  # no warm up
+
+  # losses
+  pixel_opt:
+    type: L1Loss
+    loss_weight: 1.0
+    reduction: mean
+
+# validation settings
+val:
+  val_freq: !!float 5e3
+  save_img: false
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 4
+      test_y_channel: false
+
+# logging settings
+logger:
+  print_freq: 100
+  save_checkpoint_freq: !!float 5e3
+  use_tb_logger: true
+  wandb:
+    project: ~
+    resume_id: ~
+
+# dist training settings
+dist_params:
+  backend: nccl
+  port: 29500

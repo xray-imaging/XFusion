@@ -18,8 +18,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from xfusion.train.basicsr.metrics.metric_util import reorder_image, to_y_channel
-from xfusion.train.basicsr.utils.color_util import rgb2ycbcr_pt
+from xfusion.train.basicsr.metrics.metric_util import reorder_image
 from xfusion.train.basicsr.utils.registry import METRIC_REGISTRY
 
 
@@ -51,8 +50,7 @@ def calculate_psnr(img, img2, crop_border, input_order='HWC', test_y_channel=Fal
         img2 = img2[crop_border:-crop_border, crop_border:-crop_border, ...]
 
     if test_y_channel:
-        img = to_y_channel(img)
-        img2 = to_y_channel(img2)
+        raise Exception('not implemented yet...')
 
     img = img.astype(np.float64)
     img2 = img2.astype(np.float64)
@@ -86,8 +84,7 @@ def calculate_psnr_pt(img, img2, crop_border, test_y_channel=False, **kwargs):
         img2 = img2[:, :, crop_border:-crop_border, crop_border:-crop_border]
 
     if test_y_channel:
-        img = rgb2ycbcr_pt(img, y_only=True)
-        img2 = rgb2ycbcr_pt(img2, y_only=True)
+        raise Exception('not implemented yet...')
 
     img = img.to(torch.float64)
     img2 = img2.to(torch.float64)
@@ -131,8 +128,7 @@ def calculate_ssim(img, img2, crop_border, input_order='HWC', test_y_channel=Fal
         img2 = img2[crop_border:-crop_border, crop_border:-crop_border, ...]
 
     if test_y_channel:
-        img = to_y_channel(img)
-        img2 = to_y_channel(img2)
+        raise Exception('not implemented yet...')
 
     img = img.astype(np.float64)
     img2 = img2.astype(np.float64)
@@ -172,8 +168,7 @@ def calculate_ssim_pt(img, img2, crop_border, test_y_channel=False, **kwargs):
         img2 = img2[:, :, crop_border:-crop_border, crop_border:-crop_border]
 
     if test_y_channel:
-        img = rgb2ycbcr_pt(img, y_only=True)
-        img2 = rgb2ycbcr_pt(img2, y_only=True)
+        raise Exception('not implemented yet...')
 
     img = img.to(torch.float64)
     img2 = img2.to(torch.float64)
