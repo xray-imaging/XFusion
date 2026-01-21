@@ -96,8 +96,10 @@ xfusion inference --arch-opt <i>directory/to/model architecture/yaml file</i> --
 </pre>
 
 ### Suggested useage
-For virtual experiment data, currently xfusion works for EDVRModel in the single-process mode and SwinIRModel in the multi-process mode.  
-For actual experiment data, xfusion works for both models in a unified way.  
+* For virtual experiment data, currently xfusion works for EDVRModel in the single-process mode and SwinIRModel in the multi-process mode.  
+When working on the virtual experiment data, first initialize the software, and then do the inference.  
+
+* For actual experiment data, xfusion works for both models in a unified way.  
 Do an independent initialization every time the model (EDVR-STF or SWIN-XVR) or the type of data (virtual or actual) changes.  
 When working on the actual experiment data, first initialize the software, then do the spatial calibration, and last do the inference.  
 Multiple experiments sharing the same spatial calibration can be grouped to run the model inference.
