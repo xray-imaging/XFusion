@@ -95,7 +95,7 @@ For actual experiment data, run
 xfusion inference --arch-opt <i>directory/to/model architecture/yaml file</i> --img-class <i>name of high-speed experiment</i> --model_file <i>[path/to/model file]</i> --traverse_mode <i>double or continuous</i> --tfm_file <i>[path/to/rigid/body/spatial/transformation/file]</i> --meta_file_scale <i>[path/to/nonuniform/scaling/parameters]</i> --input_dir <i>[root/directory/to/high/speed/experiment/data]</i> --case_list <i>experiment subdirectory names</i>
 </pre>
 
-### Suggested useage
+### Suggested usage
 * For virtual experiment data, currently xfusion works for EDVRModel in the single-process mode and SwinIRModel in the multi-process mode.  
 When working on the virtual experiment data, first initialize the software, and then do the inference.  
 
