@@ -79,7 +79,7 @@ def run_inference(args):
     exp_root = Path(config.get_inf_data_dirs(input_dir.name))
     device = args.device
     
-    opt_path = args.opt
+    opt_path = args.arch_opt
     opt = yaml_load(opt_path)
     opt['manual_seed'] = 10
     torch.manual_seed(opt['manual_seed'])
