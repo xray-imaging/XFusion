@@ -2,7 +2,7 @@
 Install
 =======
 
-This section covers the basics of how to install `XFusion <https://github.com/xray-imaging/XFusion>`_.
+This section covers how to install `XFusion <https://github.com/xray-imaging/XFusion>`_.
 
 .. contents:: Contents
    :local:
@@ -12,6 +12,10 @@ Prerequisites
 
 * Python 3.9+ (examples below use conda)
 * Git
+* This implementation is based on the `BasicSR toolbox <https://github.com/XPixelGroup/BasicSR>`_
+  and the `RAFT model <https://github.com/princeton-vl/RAFT>`_.
+* Data for model pre-training are collected from the
+  `REDS dataset <https://seungjunnah.github.io/Datasets/reds>`_.
 
 Installing from source (conda)
 ==============================
@@ -26,7 +30,10 @@ Clone the repository::
     git clone https://github.com/xray-imaging/XFusion.git
     cd XFusion
 
-Install XFusion::
+Install XFusion
+===============
+
+From the project root directory::
 
     pip install .
 
